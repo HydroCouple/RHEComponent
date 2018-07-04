@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ModelComponent Name="Radiative Heat Exchange Model 1.0.0" ModelComponentLibrary="../../build/debug/libRHEComponent.1.0.0.dylib">
+    <ComputeResourceAllocations>
+        <ComputeResourceAllocation MPI_Process="0" GPU_Platform="-1" GPU_Device="-1" Maximum_Number_GPU_Blocks_Or_Workgroups="0"/>
+    </ComputeResourceAllocations>
+    <Arguments>
+        <Argument Id="Identifiers" ArgumentIOType="String">
+            <IdBasedArgument Id="Identifiers" Caption="Model Identifiers" IsOptional="False">
+    <ValueDefinition Type="Quantity" ValueType="QString" MissingValue="-99999999" DefaultValue="0">
+        <Unit ConversionFactorToSI="1" OffsetToSI="0"/>
+    </ValueDefinition>
+    <Dimensions>
+        <Dimension Id="IdentifierDimension" Caption="Dimension for identifiers" Length="3"/>
+    </Dimensions>
+    <Values>
+        <Value Id="Id">kuparuk_river_model_rhe</Value>
+        <Value Id="Caption">Kuparuk river model RHE</Value>
+        <Value Id="Description"/>
+    </Values>
+</IdBasedArgument>
+        </Argument>
+        <Argument Id="InputFiles" ArgumentIOType="String">
+            <IdBasedArgument Id="InputFiles" Caption="Model Input Files" IsOptional="False">
+    <ValueDefinition Type="Quantity" ValueType="QString" MissingValue="" DefaultValue="">
+        <Unit ConversionFactorToSI="1" OffsetToSI="0"/>
+    </ValueDefinition>
+    <Dimensions>
+        <Dimension Id="IdDimension" Caption="Dimension for identifiers" Length="1"/>
+    </Dimensions>
+    <Values>
+        <Value Id="Input File">./kuparuk_river.inp </Value>
+    </Values>
+</IdBasedArgument>
+        </Argument>
+    </Arguments>
+</ModelComponent>
