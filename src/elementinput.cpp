@@ -56,57 +56,113 @@ bool ElementInput::setProvider(HydroCouple::IOutput *provider)
 
   if(AbstractInput::setProvider(provider) && provider)
   {
-    ITimeGeometryComponentDataItem *timeGeometryDataItem = dynamic_cast<ITimeGeometryComponentDataItem*>(provider);
+    ITimeGeometryComponentDataItem *timeGeometryDataItem = nullptr;
+    IGeometryComponentDataItem *geometryDataItem = nullptr;
 
-    if(timeGeometryDataItem->geometryCount())
+    if((timeGeometryDataItem = dynamic_cast<ITimeGeometryComponentDataItem*>(provider)))
     {
-      std::vector<bool> mapped(timeGeometryDataItem->geometryCount(), false);
-
-      for(int i = 0; i < geometryCount() ; i++)
+      if(timeGeometryDataItem->geometryCount())
       {
-        HCLineString *lineString = dynamic_cast<HCLineString*>(getGeometry(i));
+        std::vector<bool> mapped(timeGeometryDataItem->geometryCount(), false);
 
-        if(lineString->pointCount())
+        for(int i = 0; i < geometryCount() ; i++)
         {
-          HCPoint *p1 = lineString->pointInternal(0);
-          HCPoint *p2 = lineString->pointInternal(lineString->pointCount() - 1);
+          HCLineString *lineString = dynamic_cast<HCLineString*>(getGeometry(i));
 
-          for(int j = 0; j < timeGeometryDataItem->geometryCount() ; j++)
+          if(lineString->pointCount())
           {
-            if(!mapped[j])
+            HCPoint *p1 = lineString->pointInternal(0);
+            HCPoint *p2 = lineString->pointInternal(lineString->pointCount() - 1);
+
+            for(int j = 0; j < timeGeometryDataItem->geometryCount() ; j++)
             {
-              ILineString *lineStringProvider = dynamic_cast<ILineString*>(timeGeometryDataItem->geometry(j));
-
-              IPoint *pp1 = lineStringProvider->point(0);
-              IPoint *pp2 = lineStringProvider->point(lineStringProvider->pointCount() - 1);
-
-              double deltap1p1 = hypot(p1->x() - pp1->x() , p1->y() - pp1->y());
-              double deltap2p2 = hypot(p2->x() - pp2->x() , p2->y() - pp2->y());
-
-              double deltap1p2 = hypot(p1->x() - pp2->x() , p1->y() - pp2->y());
-              double deltap2p1 = hypot(p2->x() - pp1->x() , p2->y() - pp1->y());
-
-              if( deltap1p1 < 1e-3 && deltap2p2 < 1e-3)
+              if(!mapped[j])
               {
-                m_geometryMapping[i] = j;
-                m_geometryMappingOrientation[i] = 1.0;
-                mapped[j] = true;
-                break;
-              }
-              else if(deltap1p2 < 1e-3 &&  deltap2p1 < 1e-3)
-              {
-                m_geometryMapping[i] = j;
-                m_geometryMappingOrientation[i] = -1.0;
-                mapped[j] = true;
-                break;
+                ILineString *lineStringProvider = dynamic_cast<ILineString*>(timeGeometryDataItem->geometry(j));
+
+                IPoint *pp1 = lineStringProvider->point(0);
+                IPoint *pp2 = lineStringProvider->point(lineStringProvider->pointCount() - 1);
+
+                double deltap1p1 = hypot(p1->x() - pp1->x() , p1->y() - pp1->y());
+                double deltap2p2 = hypot(p2->x() - pp2->x() , p2->y() - pp2->y());
+
+                double deltap1p2 = hypot(p1->x() - pp2->x() , p1->y() - pp2->y());
+                double deltap2p1 = hypot(p2->x() - pp1->x() , p2->y() - pp1->y());
+
+                if( deltap1p1 < 1e-3 && deltap2p2 < 1e-3)
+                {
+                  m_geometryMapping[i] = j;
+                  m_geometryMappingOrientation[i] = 1.0;
+                  mapped[j] = true;
+                  break;
+                }
+                else if(deltap1p2 < 1e-3 &&  deltap2p1 < 1e-3)
+                {
+                  m_geometryMapping[i] = j;
+                  m_geometryMappingOrientation[i] = -1.0;
+                  mapped[j] = true;
+                  break;
+                }
               }
             }
           }
         }
       }
-    }
 
-    return true;
+      return true;
+    }
+    else if((geometryDataItem = dynamic_cast<IGeometryComponentDataItem*>(provider)))
+    {
+      if(geometryDataItem->geometryCount())
+      {
+        std::vector<bool> mapped(geometryDataItem->geometryCount(), false);
+
+        for(int i = 0; i < geometryCount() ; i++)
+        {
+          HCLineString *lineString = dynamic_cast<HCLineString*>(getGeometry(i));
+
+          if(lineString->pointCount())
+          {
+            HCPoint *p1 = lineString->pointInternal(0);
+            HCPoint *p2 = lineString->pointInternal(lineString->pointCount() - 1);
+
+            for(int j = 0; j < geometryDataItem->geometryCount() ; j++)
+            {
+              if(!mapped[j])
+              {
+                ILineString *lineStringProvider = dynamic_cast<ILineString*>(geometryDataItem->geometry(j));
+
+                IPoint *pp1 = lineStringProvider->point(0);
+                IPoint *pp2 = lineStringProvider->point(lineStringProvider->pointCount() - 1);
+
+                double deltap1p1 = hypot(p1->x() - pp1->x() , p1->y() - pp1->y());
+                double deltap2p2 = hypot(p2->x() - pp2->x() , p2->y() - pp2->y());
+
+                double deltap1p2 = hypot(p1->x() - pp2->x() , p1->y() - pp2->y());
+                double deltap2p1 = hypot(p2->x() - pp1->x() , p2->y() - pp1->y());
+
+                if( deltap1p1 < 1e-3 && deltap2p2 < 1e-3)
+                {
+                  m_geometryMapping[i] = j;
+                  m_geometryMappingOrientation[i] = 1.0;
+                  mapped[j] = true;
+                  break;
+                }
+                else if(deltap1p2 < 1e-3 &&  deltap2p1 < 1e-3)
+                {
+                  m_geometryMapping[i] = j;
+                  m_geometryMappingOrientation[i] = -1.0;
+                  mapped[j] = true;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      return true;
+    }
   }
 
   return false;
@@ -253,6 +309,21 @@ void ElementInput::applyData()
             }
           }
           break;
+        case ShadeFactorMultiplier:
+          {
+            for(auto it : m_geometryMapping)
+            {
+              double value1 = 0;
+              double value2 = 0;
+
+              timeGeometryDataItem->getValue(currentTimeIndex,it.second, &value1);
+              timeGeometryDataItem->getValue(previousTimeIndex,it.second, &value2);
+
+              Element *element =  m_component->modelInstance()->getElement(it.first);
+              element->shadeFactorMultiplier = value2 + factor *(value1 - value2);
+            }
+          }
+          break;
       }
     }
     else
@@ -311,6 +382,17 @@ void ElementInput::applyData()
               timeGeometryDataItem->getValue(currentTimeIndex,it.second, & value);
               Element *element =  m_component->modelInstance()->getElement(it.first);
               element->shadeFactor = value;
+            }
+          }
+          break;
+        case ShadeFactorMultiplier:
+          {
+            for(auto it : m_geometryMapping)
+            {
+              double value = 0;
+              timeGeometryDataItem->getValue(currentTimeIndex,it.second, & value);
+              Element *element =  m_component->modelInstance()->getElement(it.first);
+              element->shadeFactorMultiplier = value;
             }
           }
           break;
@@ -373,6 +455,17 @@ void ElementInput::applyData()
             geometryDataItem->getValue(it.second, & value);
             Element *element =  m_component->modelInstance()->getElement(it.first);
             element->shadeFactor = value;
+          }
+        }
+        break;
+      case ShadeFactorMultiplier:
+        {
+          for(auto it : m_geometryMapping)
+          {
+            double value = 0;
+            geometryDataItem->getValue(it.second, & value);
+            Element *element =  m_component->modelInstance()->getElement(it.first);
+            element->shadeFactorMultiplier = value;
           }
         }
         break;

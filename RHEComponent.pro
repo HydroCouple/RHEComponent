@@ -20,9 +20,9 @@ QT += testlib
 DEFINES += RHECOMPONENT_LIBRARY
 DEFINES += USE_OPENMP
 DEFINES += USE_MPI
-DEFINES += USE_CVODE
 DEFINES += USE_NETCDF
 #DEFINES += USE_CVODE_OPENMP
+DEFINES += USE_CHPC
 
 #Compile as library or executable
 contains(DEFINES,RHECOMPONENT_LIBRARY){
@@ -90,11 +90,6 @@ macx{
 
     INCLUDEPATH += /usr/local \
                    /usr/local/include
-
-    contains(DEFINES, USE_CVODE){
-    message("CVODE enabled")
-    LIBS += -L/usr/local/lib -lsundials_cvode
-    }
 
     contains(DEFINES, USE_NETCDF){
     message("NetCDF enabled")
@@ -188,15 +183,6 @@ win32{
     LIBS += -L$${VSPKGDIR}/debug/lib -lgdald
         } else {
     LIBS += -L$${VSPKGDIR}/lib -lgdal
-    }
-
-    contains(DEFINES, USE_CVODE){
-    message("CVODE enabled")
-    CONFIG(debug, debug|release) {
-        LIBS += -L$${VSPKGDIR}/debug/lib -lsundials_cvode
-        } else {
-        LIBS += -L$${VSPKGDIR}/lib -lsundials_cvode
-        }
     }
 
     contains(DEFINES, USE_NETCDF){

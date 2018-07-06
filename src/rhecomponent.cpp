@@ -148,7 +148,12 @@ void RHEComponent::update(const QList<HydroCouple::IOutput*> &requiredOutputs)
   {
     setStatus(IModelComponent::Updating);
 
-    m_modelInstance->update();
+    double minConsumerTime = std::max(m_modelInstance->currentDateTime(),  getMinimumConsumerTime());
+
+    while (m_modelInstance->currentDateTime() <= minConsumerTime)
+    {
+      m_modelInstance->update();
+    }
 
     updateOutputValues(requiredOutputs);
 
@@ -425,6 +430,9 @@ void RHEComponent::createInputs()
   createDepthInput();
   createTopWidthInput();
   createTemperatureInput();
+  createSkyViewFactorInput();
+  createShadeFactorInput();
+  createShadeFactorMultiplierInput();
 }
 
 void RHEComponent::createDepthInput()
@@ -518,6 +526,102 @@ void RHEComponent::createTemperatureInput()
   m_channelTemperatureInput->addTime(dt2);
 
   addInput(m_channelTemperatureInput);
+}
+
+void RHEComponent::createSkyViewFactorInput()
+{
+  Quantity *unitlessQuantity = Quantity::unitLessValues("Unitless",QVariant::Double,this);
+
+
+  m_skyviewFactorInput = new ElementInput("SkyViewFactorInput",
+                                               m_timeDimension,
+                                               m_geometryDimension,
+                                               unitlessQuantity,
+                                               ElementInput::SkyviewFactor,
+                                               this);
+
+  m_skyviewFactorInput->setCaption("Skyview Factor");
+
+  QList<QSharedPointer<HCGeometry>> geometries;
+
+  for(const QSharedPointer<HCGeometry> &lineString : m_elementGeometries)
+  {
+    geometries.append(lineString);
+  }
+
+  m_skyviewFactorInput->addGeometries(geometries);
+
+  SDKTemporal::DateTime *dt1 = new SDKTemporal::DateTime(m_modelInstance->currentDateTime()- 1.0/1000000.0, m_skyviewFactorInput);
+  SDKTemporal::DateTime *dt2 = new SDKTemporal::DateTime(m_modelInstance->currentDateTime(), m_skyviewFactorInput);
+
+  m_skyviewFactorInput->addTime(dt1);
+  m_skyviewFactorInput->addTime(dt2);
+
+  addInput(m_skyviewFactorInput);
+}
+
+void RHEComponent::createShadeFactorInput()
+{
+  Quantity *unitlessQuantity = Quantity::unitLessValues("Unitless",QVariant::Double,this);
+
+
+  m_shadeFactorInput = new ElementInput("ShadeFactorInput",
+                                               m_timeDimension,
+                                               m_geometryDimension,
+                                               unitlessQuantity,
+                                               ElementInput::ShadeFactor,
+                                               this);
+
+  m_shadeFactorInput->setCaption("Shade Factor");
+
+  QList<QSharedPointer<HCGeometry>> geometries;
+
+  for(const QSharedPointer<HCGeometry> &lineString : m_elementGeometries)
+  {
+    geometries.append(lineString);
+  }
+
+  m_shadeFactorInput->addGeometries(geometries);
+
+  SDKTemporal::DateTime *dt1 = new SDKTemporal::DateTime(m_modelInstance->currentDateTime()- 1.0/1000000.0, m_shadeFactorInput);
+  SDKTemporal::DateTime *dt2 = new SDKTemporal::DateTime(m_modelInstance->currentDateTime(), m_shadeFactorInput);
+
+  m_shadeFactorInput->addTime(dt1);
+  m_shadeFactorInput->addTime(dt2);
+
+  addInput(m_shadeFactorInput);
+}
+
+void RHEComponent::createShadeFactorMultiplierInput()
+{
+  Quantity *unitlessQuantity =  Quantity::unitLessValues("Unitless",QVariant::Double,this);
+
+
+  m_shadeFactorMultiplierInput = new ElementInput("ShadeFactorMultiplierInput",
+                                               m_timeDimension,
+                                               m_geometryDimension,
+                                               unitlessQuantity,
+                                               ElementInput::ShadeFactorMultiplier,
+                                               this);
+
+  m_shadeFactorMultiplierInput->setCaption("Shade Factor Multiplier");
+
+  QList<QSharedPointer<HCGeometry>> geometries;
+
+  for(const QSharedPointer<HCGeometry> &lineString : m_elementGeometries)
+  {
+    geometries.append(lineString);
+  }
+
+  m_shadeFactorMultiplierInput->addGeometries(geometries);
+
+  SDKTemporal::DateTime *dt1 = new SDKTemporal::DateTime(m_modelInstance->currentDateTime()- 1.0/1000000.0, m_shadeFactorMultiplierInput);
+  SDKTemporal::DateTime *dt2 = new SDKTemporal::DateTime(m_modelInstance->currentDateTime(), m_shadeFactorMultiplierInput);
+
+  m_shadeFactorMultiplierInput->addTime(dt1);
+  m_shadeFactorMultiplierInput->addTime(dt2);
+
+  addInput(m_shadeFactorMultiplierInput);
 }
 
 void RHEComponent::createOutputs()

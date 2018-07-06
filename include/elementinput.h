@@ -42,7 +42,8 @@ class RHECOMPONENT_EXPORT ElementInput : public TimeGeometryInputDouble
       TopWidth,
       SkyviewFactor,
       Temperature,
-      ShadeFactor
+      ShadeFactor,
+      ShadeFactorMultiplier,
     };
 
     ElementInput(const QString &id,

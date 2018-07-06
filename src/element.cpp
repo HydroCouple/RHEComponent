@@ -41,6 +41,8 @@ Element::Element(const std::string &id, ElementJunction *upstream, ElementJuncti
     airTemperature(0.0),
     incomingSWSolarRadiation(0.0),
     skyViewFactor(1.0),
+    shadeFactor(0.0),
+    shadeFactorMultiplier(1.0),
     landCoverEmiss(0.96),
     netSWSolarRadiation(0.0),
     backLWRadiation(0.0),
@@ -102,7 +104,7 @@ double Element::computeRadiation()
 
 void Element::computeNetSWSolarRadiation()
 {
-  netSWSolarRadiation = (1.0  - model->m_albedo) * incomingSWSolarRadiation * (1.0 - shadeFactor);
+  netSWSolarRadiation = (1.0  - model->m_albedo) * incomingSWSolarRadiation * (1.0 - shadeFactor * shadeFactorMultiplier);
   sedNetSWSolarRadiation = netSWSolarRadiation * exp(-model->m_extinctionCoefficient * channelDepth);
   netSWSolarRadiation -= sedNetSWSolarRadiation;
 }

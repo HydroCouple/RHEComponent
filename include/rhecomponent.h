@@ -39,6 +39,8 @@ class RHECOMPONENT_EXPORT RHEComponent : public AbstractTimeModelComponent,
 {
     Q_OBJECT
 
+    Q_INTERFACES(HydroCouple::ICloneableModelComponent)
+
   public:
 
     /*!
@@ -160,6 +162,22 @@ class RHECOMPONENT_EXPORT RHEComponent : public AbstractTimeModelComponent,
      */
     void createTemperatureInput();
 
+
+    /*!
+     * \brief createSkyViewFactorInput
+     */
+    void createSkyViewFactorInput();
+
+    /*!
+     * \brief createShadeFactorInput
+     */
+    void createShadeFactorInput();
+
+    /*!
+     * \brief createShadeFactorMultiplierInput
+     */
+    void createShadeFactorMultiplierInput();
+
     /*!
      * \brief createOutputs
      */
@@ -176,7 +194,11 @@ class RHECOMPONENT_EXPORT RHEComponent : public AbstractTimeModelComponent,
 
     ElementInput *m_depthInput,
     *m_topWidthInput,
-    *m_channelTemperatureInput;
+    *m_channelTemperatureInput,
+    *m_skyviewFactorInput,
+    *m_shadeFactorInput,
+    *m_shadeFactorMultiplierInput;
+
 
     ElementOutput *m_netSWSolarRadiationOutput,
     *m_backLWRadiationOutput,

@@ -145,6 +145,11 @@ struct RHECOMPONENT_EXPORT Element
     double shadeFactor;
 
     /*!
+     * \brief shadeFactorMultiplier
+     */
+    double shadeFactorMultiplier;
+
+    /*!
      * \brief landCoverEmiss
      */
     double landCoverEmiss;
