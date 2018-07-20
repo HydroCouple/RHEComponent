@@ -27,7 +27,6 @@ void RHEModel::update()
     //Solve heat transport first
     solveHeatTransport(m_timeStep);
 
-
     m_prevDateTime = m_currentDateTime;
 
     prepareForNextTimeStep();

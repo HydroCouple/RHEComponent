@@ -1,7 +1,7 @@
 #Author Caleb Amoa Buahin
 #Email caleb.buahin@gmail.com
 #Date 2018
-#License GNU General Public License (see <http: //www.gnu.org/licenses/> for details).
+#License GNU Lesser General Public License (see <http: //www.gnu.org/licenses/> for details).
 #The RHEComponent is a component-based radiative heat exchange stream transport model
 
 TEMPLATE = lib
@@ -10,19 +10,14 @@ TARGET = RHEComponent
 QT -= gui
 QT += testlib
 
-
-#Added for faster compilation
-*msvc* { # visual studio spec filter
-      QMAKE_CXXFLAGS += /MP /O2
-  }
-
-
 DEFINES += RHECOMPONENT_LIBRARY
 DEFINES += USE_OPENMP
 DEFINES += USE_MPI
 DEFINES += USE_NETCDF
 #DEFINES += USE_CVODE_OPENMP
 DEFINES += USE_CHPC
+#DEFINES += QT_NO_VERSION_TAGGING
+
 
 #Compile as library or executable
 contains(DEFINES,RHECOMPONENT_LIBRARY){
@@ -35,10 +30,8 @@ contains(DEFINES,RHECOMPONENT_LIBRARY){
 }
 
 CONFIG += c++11
-
-linux{
 CONFIG += debug_and_release
-}
+CONFIG += optimize_full
 
 PRECOMPILED_HEADER = ./include/stdafx.h
 
@@ -136,20 +129,19 @@ macx{
 
 linux{
 
-INCLUDEPATH += /usr/include \
-               ../gdal/include
+    INCLUDEPATH += /usr/include \
+                   ../gdal/include
 
-    contains(DEFINES,UTAH_CHPC){
+    contains(DEFINES,USE_CHPC){
 
          INCLUDEPATH += /uufs/chpc.utah.edu/sys/installdir/hdf5/1.8.17-c7/include \
                         /uufs/chpc.utah.edu/sys/installdir/netcdf-c/4.3.3.1/include \
-                        /uufs/chpc.utah.edu/sys/installdir/netcdf-cxx/4.3.0-c7/include \
-                        ../hypre/build/include
+                        /uufs/chpc.utah.edu/sys/installdir/netcdf-cxx/4.3.0-c7/include
 
 
-         LIBS += -L/uufs/chpc.utah.edu/sys/installdir/hdf5/1.8.17-c7/lib -lhdf5 \
-                 -L/uufs/chpc.utah.edu/sys/installdir/netcdf-cxx/4.3.0-c7/lib -lnetcdf_c++4 \
-                 -L../hypre/build/lib -lHYPRE
+         LIBS += -L/uufs/chpc.utah.edu/sys/installdir/hdf5/1.8.17-c7/lib -l:libhdf5.so.10.2.0 \
+                 -L/uufs/chpc.utah.edu/sys/installdir/netcdf-c/4.4.1/lib -l:libnetcdf.so.11.0.3 \
+                 -L/uufs/chpc.utah.edu/sys/installdir/netcdf-cxx/4.3.0-c7/lib -l:libnetcdf_c++4.so.1.0.3
 
          message("Compiling on CHPC")
     }
@@ -167,6 +159,26 @@ INCLUDEPATH += /usr/include \
     } else {
 
       message("OpenMP disabled")
+
+    }
+
+    contains(DEFINES,USE_MPI){
+
+        QMAKE_CC = mpicc
+        QMAKE_CXX = mpic++
+        QMAKE_LINK = mpic++
+
+        QMAKE_CFLAGS += $$system(mpicc --showme:compile)
+        QMAKE_CXXFLAGS += $$system(mpic++ --showme:compile)
+        QMAKE_LFLAGS += $$system(mpic++ --showme:link)
+
+        LIBS += -L/usr/local/lib/ -lmpi
+
+        message("MPI enabled")
+
+        } else {
+
+        message("MPI disabled")
 
     }
 }
@@ -223,9 +235,27 @@ win32{
       message("MPI disabled")
 
      }
+
+    QMAKE_CXXFLAGS += /MP
 }
 
 CONFIG(debug, debug|release) {
+
+    win32 {
+       QMAKE_CXXFLAGS_DEBUG = $$QMAKE_CXXFLAGS /MDd  /O2
+    }
+
+    macx {
+     QMAKE_CFLAGS_DEBUG = $$QMAKE_CFLAGS -g -O3
+     QMAKE_CXXFLAGS_DEBUG = $$QMAKE_CXXFLAGS -g -O3
+    }
+
+    linux {
+     QMAKE_CFLAGS_DEBUG = $$QMAKE_CFLAGS -g -O3
+     QMAKE_CXXFLAGS_DEBUG = $$QMAKE_CXXFLAGS -g -O3
+    }
+
+
 
    DESTDIR = ./build/debug
    OBJECTS_DIR = $$DESTDIR/.obj
@@ -243,7 +273,7 @@ CONFIG(debug, debug|release) {
    linux{
 
     QMAKE_POST_LINK += "cp -a ./../HydroCoupleSDK/build/debug/*HydroCoupleSDK.* ./build/debug/";
-    LIBS += -L./../HydroCoupleSDK/build/debug -lHydroCoupleSDK.so.1.0.0
+    LIBS += -L./../HydroCoupleSDK/build/debug -lHydroCoupleSDK
 
     }
 
@@ -257,6 +287,10 @@ CONFIG(debug, debug|release) {
 
 CONFIG(release, debug|release) {
 
+   win32 {
+    QMAKE_CXXFLAGS_RELEASE = $$QMAKE_CXXFLAGS /MD
+   }
+
     RELEASE_EXTRAS = ./build/release
     OBJECTS_DIR = $$RELEASE_EXTRAS/.obj
     MOC_DIR = $$RELEASE_EXTRAS/.moc
@@ -268,14 +302,14 @@ CONFIG(release, debug|release) {
     }
 
    linux{
-    LIBS += -L./../HydroCoupleSDK/lib/linux -lHydroCoupleSDK.so.1.0.0
+    LIBS += -L./../HydroCoupleSDK/lib/linux -lHydroCoupleSDK
     }
 
    win32{
     LIBS += -L./../HydroCoupleSDK/lib/win32 -lHydroCoupleSDK1
     }
 
-     contains(DEFINES,RHEComponent_LIBRARY){
+     contains(DEFINES,RHECOMPONENT_LIBRARY){
          #MacOS
          macx{
              DESTDIR = lib/macx

@@ -5,7 +5,7 @@
  *  \section Description
  *  This file and its associated files and libraries are free software;
  *  you can redistribute it and/or modify it under the terms of the
- *  Lesser GNU General Public License as published by the Free Software Foundation;
+ *  Lesser GNU Lesser General Public License as published by the Free Software Foundation;
  *  either version 3 of the License, or (at your option) any later version.
  *  fvhmcompopnent.h its associated files is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -86,18 +86,19 @@ RHEComponent::~RHEComponent()
 
   initializeFailureCleanUp();
 
-  if(m_parent)
-  {
-    m_parent->removeClone(this);
-  }
-
-
   while (m_clones.size())
   {
     RHEComponent *clone = dynamic_cast<RHEComponent*>(m_clones.first());
     removeClone(clone);
-//    delete clone;
+    delete clone;
   }
+
+  if(m_parent)
+  {
+    m_parent->removeClone(this);
+    m_parent = nullptr;
+  }
+
 }
 
 QList<QString> RHEComponent::validate()
@@ -150,9 +151,15 @@ void RHEComponent::update(const QList<HydroCouple::IOutput*> &requiredOutputs)
 
     double minConsumerTime = std::max(m_modelInstance->currentDateTime(),  getMinimumConsumerTime());
 
-    while (m_modelInstance->currentDateTime() <= minConsumerTime)
+    while (m_modelInstance->currentDateTime() <= minConsumerTime &&
+           m_modelInstance->currentDateTime() < m_modelInstance->endDateTime())
     {
       m_modelInstance->update();
+
+      if(progressChecker()->performStep(m_modelInstance->currentDateTime()))
+      {
+        setStatus(IModelComponent::Updated , "Simulation performed time-step | DateTime: " + QString::number(m_modelInstance->currentDateTime(), 'f') , progressChecker()->progress());
+      }
     }
 
     updateOutputValues(requiredOutputs);
@@ -167,7 +174,7 @@ void RHEComponent::update(const QList<HydroCouple::IOutput*> &requiredOutputs)
     {
       if(progressChecker()->performStep(m_modelInstance->currentDateTime()))
       {
-        setStatus(IModelComponent::Updated , "Simulation performed time-step | DateTime: " + QString::number(m_modelInstance->currentDateTime()) , progressChecker()->progress());
+        setStatus(IModelComponent::Updated , "Simulation performed time-step | DateTime: " + QString::number(m_modelInstance->currentDateTime(), 'f') , progressChecker()->progress());
       }
       else
       {
@@ -276,7 +283,7 @@ bool RHEComponent::removeClone(RHEComponent *component)
   int removed;
 
 #ifdef USE_OPENMP
-#pragma omp critical
+#pragma omp critical (RHEComponent)
 #endif
   {
     removed = m_clones.removeAll(component);
