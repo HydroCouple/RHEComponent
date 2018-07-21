@@ -665,10 +665,10 @@ class RHECOMPONENT_EXPORT RHEModel : public QObject
 #endif
 
     QTextStream m_outputCSVStream; //Output CSV filestream
-    static const std::unordered_map<std::string, int> m_inputFileFlags, //Input file flags
-    m_optionsFlags, //Input file flags
-    m_hydraulicVariableFlags, //Hydraulic variable flags
-    m_meteorologicalVariableFlags; //Meteorology variables
+    static const std::unordered_map<std::string, int> m_inputFileFlags; //Input file flags
+    static const std::unordered_map<std::string, int> m_optionsFlags; //Input file flags
+    static const std::unordered_map<std::string, int> m_hydraulicVariableFlags; //Hydraulic variable flags
+    static const std::unordered_map<std::string, int> m_meteorologicalVariableFlags; //Meteorology variables
 
     static const QRegExp m_dateTimeDelim;
     QRegExp m_delimiters; //Regex delimiter

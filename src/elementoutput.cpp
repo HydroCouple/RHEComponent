@@ -96,7 +96,7 @@ void ElementOutput::updateValues()
 #ifdef USE_OPENMP
 #pragma omp parallel for
 #endif
-        for(size_t i = 0 ; i < m_geometries.size() ; i++)
+        for(int i = 0 ; i < (int)m_geometries.size() ; i++)
         {
           Element *element = m_component->modelInstance()->getElement(i);
           double value = element->netSWSolarRadiation;
@@ -109,7 +109,7 @@ void ElementOutput::updateValues()
 #ifdef USE_OPENMP
 #pragma omp parallel for
 #endif
-        for(size_t i = 0 ; i < m_geometries.size() ; i++)
+        for(int i = 0 ; i < (int)m_geometries.size() ; i++)
         {
           Element *element = m_component->modelInstance()->getElement(i);
           double value = element->backLWRadiation;
@@ -122,7 +122,7 @@ void ElementOutput::updateValues()
 #ifdef USE_OPENMP
 #pragma omp parallel for
 #endif
-        for(size_t i = 0 ; i < m_geometries.size() ; i++)
+        for(int i = 0 ; i < (int)m_geometries.size() ; i++)
         {
           Element *element = m_component->modelInstance()->getElement(i);
           double value = element->sedNetSWSolarRadiation;
@@ -135,7 +135,7 @@ void ElementOutput::updateValues()
 #ifdef USE_OPENMP
 #pragma omp parallel for
 #endif
-        for(size_t i = 0 ; i < m_geometries.size() ; i++)
+        for(int i = 0 ; i < m_geometries.size() ; i++)
         {
           Element *element = m_component->modelInstance()->getElement(i);
           double value = element->atmosphericLWRadiation;
@@ -150,7 +150,7 @@ void ElementOutput::updateValues()
 #ifdef USE_OPENMP
 #pragma omp parallel for
 #endif
-        for(size_t i = 0 ; i < m_geometries.size() ; i++)
+        for(int i = 0 ; i < m_geometries.size() ; i++)
         {
           Element *element = m_component->modelInstance()->getElement(i);
           double value = element->landCoverLWRadiation;
