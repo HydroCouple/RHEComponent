@@ -118,7 +118,7 @@ void RHEModel::solveHeatTransport(double timeStep)
 #ifdef USE_OPENMP
 #pragma omp parallel for
 #endif
-  for(int i = 0 ; i < m_elements.size(); i++)
+  for(int i = 0 ; i < (int)m_elements.size(); i++)
   {
     Element *element = m_elements[i];
     element->computeRadiation();

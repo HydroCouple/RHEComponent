@@ -14,9 +14,7 @@ DEFINES += RHECOMPONENT_LIBRARY
 DEFINES += USE_OPENMP
 DEFINES += USE_MPI
 DEFINES += USE_NETCDF
-#DEFINES += USE_CVODE_OPENMP
 DEFINES += USE_CHPC
-#DEFINES += QT_NO_VERSION_TAGGING
 
 
 #Compile as library or executable
@@ -112,10 +110,6 @@ macx{
         QMAKE_CXX = /usr/local/bin/mpicxx
         QMAKE_LINK = /usr/local/bin/mpicxx
 
-        QMAKE_CFLAGS += $$system(mpicc --showme:compile)
-        QMAKE_CXXFLAGS += $$system(mpic++ --showme:compile)
-        QMAKE_LFLAGS += $$system(mpic++ --showme:link)
-
         LIBS += -L/usr/local/lib -lmpi
 
         message("MPI enabled")
@@ -168,9 +162,6 @@ linux{
         QMAKE_CXX = mpic++
         QMAKE_LINK = mpic++
 
-        QMAKE_CFLAGS += $$system(mpicc --showme:compile)
-        QMAKE_CXXFLAGS += $$system(mpic++ --showme:compile)
-        QMAKE_LFLAGS += $$system(mpic++ --showme:link)
 
         LIBS += -L/usr/local/lib/ -lmpi
 
@@ -185,36 +176,33 @@ linux{
 
 win32{
 
-    #Windows vspkg package manager installation path
-    VSPKGDIR = C:/vcpkg/installed/x64-windows
+    #Windows vspkg package manager installation path if environment variable is not set
+    #VCPKGDIR = C:/vcpkg/installed/x64-windows
 
-    INCLUDEPATH += $${VSPKGDIR}/include \
-                   $${VSPKGDIR}/include/gdal
+    INCLUDEPATH += $${VCPKGDIR}/include \
+                   $${VCPKGDIR}/include/gdal
 
     CONFIG(debug, debug|release) {
-    LIBS += -L$${VSPKGDIR}/debug/lib -lgdald
+    LIBS += -L$${VCPKGDIR}/debug/lib -lgdald
         } else {
-    LIBS += -L$${VSPKGDIR}/lib -lgdal
+    LIBS += -L$${VCPKGDIR}/lib -lgdal
     }
 
     contains(DEFINES, USE_NETCDF){
     message("NetCDF enabled")
     CONFIG(release, debug|release) {
-        LIBS += -L$${VSPKGDIR}/lib -lnetcdf \
-                -L$${VSPKGDIR}/lib -lnetcdf-cxx4
+        LIBS += -L$${VCPKGDIR}/lib -lnetcdf \
+                -L$${VCPKGDIR}/lib -lnetcdf-cxx4
         } else {
-        LIBS += -L$${VSPKGDIR}/debug/lib -lnetcdf \
-                -L$${VSPKGDIR}/debug/lib -lnetcdf-cxx4
+        LIBS += -L$${VCPKGDIR}/debug/lib -lnetcdf \
+                -L$${VCPKGDIR}/debug/lib -lnetcdf-cxx4
         }
     }
 
     contains(DEFINES,USE_OPENMP){
 
         QMAKE_CFLAGS += /openmp
-        QMAKE_LFLAGS += /openmp
         QMAKE_CXXFLAGS += /openmp
-        QMAKE_CXXFLAGS_RELEASE = $$QMAKE_CXXFLAGS
-        QMAKE_CXXFLAGS_DEBUG = $$QMAKE_CXXFLAGS
 
         message("OpenMP enabled")
 
@@ -225,16 +213,18 @@ win32{
      }
 
     contains(DEFINES,USE_MPI){
-
-       LIBS += -L$$(MSMPI_LIB64)/ -lmsmpi
-
        message("MPI enabled")
 
-     } else {
+        CONFIG(debug, debug|release) {
+            LIBS += -L$${VCPKGDIR}/debug/lib -lmsmpi
+          } else {
+            LIBS += -L$${VCPKGDIR}/lib -lmsmpi
+        }
 
+    } else {
       message("MPI disabled")
+    }
 
-     }
 
     QMAKE_CXXFLAGS += /MP
     QMAKE_LFLAGS += /MP /incremental /debug:fastlink
@@ -243,20 +233,16 @@ win32{
 CONFIG(debug, debug|release) {
 
     win32 {
-       QMAKE_CXXFLAGS += /MDd  /O2
+       QMAKE_CXXFLAGS += /MDd /O2
     }
 
     macx {
-     QMAKE_CFLAGS_DEBUG = $$QMAKE_CFLAGS -g -O3
-     QMAKE_CXXFLAGS_DEBUG = $$QMAKE_CXXFLAGS -g -O3
+       QMAKE_CXXFLAGS += -O3
     }
 
     linux {
-     QMAKE_CFLAGS_DEBUG = $$QMAKE_CFLAGS -g -O3
-     QMAKE_CXXFLAGS_DEBUG = $$QMAKE_CXXFLAGS -g -O3
+       QMAKE_CXXFLAGS += -O3
     }
-
-
 
    DESTDIR = ./build/debug
    OBJECTS_DIR = $$DESTDIR/.obj
@@ -299,7 +285,7 @@ CONFIG(release, debug|release) {
     UI_DIR = $$RELEASE_EXTRAS/.ui
 
    macx{
-    LIBS += -L./../HydroCoupleSDK/lib/macx -lHydroCoupleSDK.1.0.0
+    LIBS += -L./../HydroCoupleSDK/lib/macx -lHydroCoupleSDK
     }
 
    linux{
