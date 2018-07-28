@@ -312,7 +312,7 @@ CONFIG(release, debug|release) {
          #Windows
          win32{
              DESTDIR = lib/win32
-             QMAKE_POST_LINK += "copy ./../HydroCoupleSDK/lib/win32/*HydroCoupleSDK* ./lib/win32/";
+             QMAKE_POST_LINK += "copy /B .\..\HydroCoupleSDK\lib\win32\HydroCoupleSDK* .\lib\win32"
         }
     } else {
          #MacOS
@@ -330,7 +330,7 @@ CONFIG(release, debug|release) {
          #Windows
          win32{
              DESTDIR = bin/win32
-             QMAKE_POST_LINK += "copy ./../HydroCoupleSDK/lib/win32/*HydroCoupleSDK* ./bin/win32/";
+             QMAKE_POST_LINK += "copy /B .\..\HydroCoupleSDK\lib\win32\HydroCoupleSDK* .\bin\win32";
         }
     }
 }
