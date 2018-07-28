@@ -44,3 +44,4 @@ CMakeLists.txt.user*
 *.rc
 *.pch
 *.lib
+*.ilk

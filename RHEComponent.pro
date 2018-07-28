@@ -177,7 +177,7 @@ linux{
 win32{
 
     #Windows vspkg package manager installation path if environment variable is not set
-    #VCPKGDIR = C:/vcpkg/installed/x64-windows
+    VCPKGDIR = C:/vcpkg/installed/x64-windows
 
     INCLUDEPATH += $${VCPKGDIR}/include \
                    $${VCPKGDIR}/include/gdal
@@ -227,7 +227,7 @@ win32{
 
 
     QMAKE_CXXFLAGS += /MP
-    QMAKE_LFLAGS += /MP /incremental /debug:fastlink
+    QMAKE_LFLAGS += /incremental /debug:fastlink
 }
 
 CONFIG(debug, debug|release) {
@@ -266,7 +266,7 @@ CONFIG(debug, debug|release) {
 
    win32{
 
-    QMAKE_POST_LINK += "copy ./../HydroCoupleSDK/build/debug/*HydroCoupleSDK.* ./build/debug/";
+    QMAKE_POST_LINK += "copy /B .\..\HydroCoupleSDK\build\debug\HydroCoupleSDK* .\build\debug"
     LIBS += -L./../HydroCoupleSDK/build/debug -lHydroCoupleSDK1
 
     }
