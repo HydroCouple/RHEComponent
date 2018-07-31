@@ -121,7 +121,7 @@ void Element::computeAtmosphericLWRadiation()
   vaporPressureAir = relativeHumidity * saturationVaporPressureAir / 100.0;
 
   double airTempK = airTemperature + 273.15;
-  double emiss = model->m_atmEmissCoeff + 0.031 * sqrt(vaporPressureAir/ /*0.134580245*/ 0.133322387415);
+  double emiss = model->m_atmEmissCoeff + 0.0027 * sqrt(vaporPressureAir * 1000);
 
   atmosphericLWRadiation = model->m_stefanBoltzmannConst * (airTempK * airTempK * airTempK * airTempK) *
                            emiss * (1.0 - model->m_atmLWReflection);
