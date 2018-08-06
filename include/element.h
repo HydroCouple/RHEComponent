@@ -234,6 +234,12 @@ struct RHECOMPONENT_EXPORT Element
     */
     double downstreamElementDirection;
 
+
+    /*!
+     * \brief distanceFromUpStreamJunction
+     */
+    double distanceFromUpStreamJunction;
+
     /*!
     * \brief model
     */

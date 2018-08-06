@@ -23,7 +23,6 @@
 
 #include "rhecomponent_global.h"
 #include "spatial/network.h"
-#include "odesolver.h"
 #include "threadsafenetcdf/threadsafencvar.h"
 
 #include <vector>
@@ -605,6 +604,13 @@ class RHECOMPONENT_EXPORT RHEModel : public QObject
      * \return
      */
     bool findProfile(Element *from, Element *to, std::list<Element*> &profile);
+
+
+    /*!
+     * \brief calculateDistanceFromUpstreamJunction
+     * \param Element
+     */
+    void calculateDistanceFromUpstreamJunction(Element *element);
 
   private:
 

@@ -324,9 +324,9 @@ bool RHEModel::initializeNetCDFOutputFile(list<string> &errors)
     //time variable
     ThreadSafeNcDim timeDim =  m_outputNetCDF->addDim("time");
     ThreadSafeNcVar timeVar =  m_outputNetCDF->addVar("time", NcType::nc_DOUBLE, timeDim);
-    timeVar.putAtt("time:long_name", "time");
-    timeVar.putAtt("time:units", "days since 1858-11-17 0:0:0");
-    timeVar.putAtt("time:calendar", "modified_julian");
+    timeVar.putAtt("long_name", "Time");
+    timeVar.putAtt("standard_name", "time");
+    timeVar.putAtt("calendar", "julian");
     m_outNetCDFVariables["time"] = timeVar;
 
 
@@ -334,22 +334,22 @@ bool RHEModel::initializeNetCDFOutputFile(list<string> &errors)
     ThreadSafeNcDim junctionDim =  m_outputNetCDF->addDim("element_junctions", m_elementJunctions.size());
 
     ThreadSafeNcVar junctionIdentifiers =  m_outputNetCDF->addVar("element_junction_id", NcType::nc_STRING, junctionDim);
-    junctionIdentifiers.putAtt("element_junction_id::long_name", "element junction identifier");
+    junctionIdentifiers.putAtt("long_name", "Element Junction Identifier");
     m_outNetCDFVariables["element_junction_id"] = junctionIdentifiers;
 
     ThreadSafeNcVar junctionX =  m_outputNetCDF->addVar("x", NcType::nc_DOUBLE, junctionDim);
-    junctionX.putAtt("x:long_name", "junction x-coordinate");
-    junctionX.putAtt("x:units", "m");
+    junctionX.putAtt("long_name", "Junction X-Coordinate");
+    junctionX.putAtt("units", "m");
     m_outNetCDFVariables["x"] = junctionX;
 
     ThreadSafeNcVar junctionY =  m_outputNetCDF->addVar("y", NcType::nc_DOUBLE, junctionDim);
-    junctionY.putAtt("y:long_name", "junction y-coordinate");
-    junctionY.putAtt("y:units", "m");
+    junctionY.putAtt("long_name", "Junction Y-Zoordinate");
+    junctionY.putAtt("units", "m");
     m_outNetCDFVariables["y"] = junctionY;
 
     ThreadSafeNcVar junctionZ =  m_outputNetCDF->addVar("z", NcType::nc_DOUBLE, junctionDim);
-    junctionZ.putAtt("z:long_name", "junction z-coordinate");
-    junctionZ.putAtt("z:units", "m");
+    junctionZ.putAtt("long_name", "junction z-coordinate");
+    junctionZ.putAtt("units", "m");
     m_outNetCDFVariables["z"] = junctionZ;
 
     double *vertx = new double[m_elementJunctions.size()];
@@ -393,20 +393,26 @@ bool RHEModel::initializeNetCDFOutputFile(list<string> &errors)
     ThreadSafeNcDim elementsDim =  m_outputNetCDF->addDim("elements", m_elements.size());
 
     ThreadSafeNcVar elementIdentifiers =  m_outputNetCDF->addVar("element_id", NcType::nc_STRING, elementsDim);
-    elementIdentifiers.putAtt("element_id::long_name", "element identifier");
+    elementIdentifiers.putAtt("long_name", "Element Identifier");
     m_outNetCDFVariables["element_id"] = elementIdentifiers;
 
     ThreadSafeNcVar elementFromJunction =  m_outputNetCDF->addVar("from_junction", NcType::nc_INT64, elementsDim);
-    elementFromJunction.putAtt("from_junction:long_name", "upstream junction");
+    elementFromJunction.putAtt("long_name", "Upstream Junction");
     m_outNetCDFVariables["from_junction"] = elementFromJunction;
 
     ThreadSafeNcVar elementToJunction =  m_outputNetCDF->addVar("to_junction", NcType::nc_INT64, elementsDim);
-    elementToJunction.putAtt("to_junction:long_name", "downstream junction");
+    elementToJunction.putAtt("long_name", "Downstream Junction");
     m_outNetCDFVariables["to_junction"] = elementToJunction;
+
+    ThreadSafeNcVar elementsVar =  m_outputNetCDF->addVar("elements", NcType::nc_DOUBLE, elementsDim);
+    elementsVar.putAtt("long_name", "Distance");
+    elementsVar.putAtt("units", "m");
+    m_outNetCDFVariables["elements"] = elementsVar;
 
     int *fromJunctions = new int[m_elements.size()];
     int *toJunctions = new int[m_elements.size()];
     char **elementIds = new char *[m_elements.size()];
+    double *els = new double[m_elements.size()];
 
 #ifdef USE_OPENMP
 #pragma omp parallel for
@@ -420,14 +426,18 @@ bool RHEModel::initializeNetCDFOutputFile(list<string> &errors)
 
       fromJunctions[i] = element->upstreamJunction->index;
       toJunctions[i] = element->downstreamJunction->index;
+      els[i] = element->distanceFromUpStreamJunction;
+
     }
 
     elementIdentifiers.putVar(elementIds);
     elementFromJunction.putVar(fromJunctions);
     elementToJunction.putVar(toJunctions);
+    elementsVar.putVar(els);
 
     delete[] fromJunctions;
     delete[] toJunctions;
+    delete[] els;
 
     for (int i = 0; i < (int)m_elements.size(); i++)
     {
@@ -439,68 +449,68 @@ bool RHEModel::initializeNetCDFOutputFile(list<string> &errors)
     //hydraulics variables
     ThreadSafeNcVar depthVar =  m_outputNetCDF->addVar("depth", "double",
                                                        std::vector<std::string>({"time", "elements"}));
-    depthVar.putAtt("depth:long_name", "channel flow depth");
-    depthVar.putAtt("depth:units", "m");
+    depthVar.putAtt("long_name", "Flow Depth");
+    depthVar.putAtt("units", "m");
     m_outNetCDFVariables["depth"] = depthVar;
 
     ThreadSafeNcVar widthVar =  m_outputNetCDF->addVar("width", "double",
                                                        std::vector<std::string>({"time", "elements"}));
-    widthVar.putAtt("width:long_name", "channel flow top width");
-    widthVar.putAtt("width:units", "m");
+    widthVar.putAtt("long_name", "Flow Top Width");
+    widthVar.putAtt("units", "m");
     m_outNetCDFVariables["width"] = widthVar;
 
     ThreadSafeNcVar temperatureVar =  m_outputNetCDF->addVar("channeltemperature", "double",
                                                              std::vector<std::string>({"time", "elements"}));
-    temperatureVar.putAtt("channeltemperature:long_name", "temperature");
-    temperatureVar.putAtt("channeltemperature:units", "°C");
+    temperatureVar.putAtt("long_name", "Temperature");
+    temperatureVar.putAtt("units", "°C");
     m_outNetCDFVariables["channeltemperature"] = temperatureVar;
 
 
     ThreadSafeNcVar incomingSWSolarRadiationVar =  m_outputNetCDF->addVar("incoming_shortwave_solar_radiation", "double",
                                                                           std::vector<std::string>({"time", "elements"}));
-    incomingSWSolarRadiationVar.putAtt("incoming_shortwave_solar_radiation:long_name", "incoming shortwave solar radiation");
-    incomingSWSolarRadiationVar.putAtt("incoming_shortwave_solar_radiation:units", "W/m^2");
+    incomingSWSolarRadiationVar.putAtt("long_name", "Incoming Shortwave Solar Radiation");
+    incomingSWSolarRadiationVar.putAtt("units", "W/m^2");
     m_outNetCDFVariables["incoming_shortwave_solar_radiation"] = incomingSWSolarRadiationVar;
 
 
     ThreadSafeNcVar netSWSolarRadiationVar =  m_outputNetCDF->addVar("net_shortwave_solar_radiation", "double",
                                                                      std::vector<std::string>({"time", "elements"}));
-    netSWSolarRadiationVar.putAtt("net_shortwave_solar_radiation:long_name", "Net shortwave solar radiation");
-    netSWSolarRadiationVar.putAtt("net_shortwave_solar_radiation:units", "W/m^2");
+    netSWSolarRadiationVar.putAtt("long_name", "Net Shortwave Solar Radiation");
+    netSWSolarRadiationVar.putAtt("units", "W/m^2");
     m_outNetCDFVariables["net_shortwave_solar_radiation"] = netSWSolarRadiationVar;
 
 
     ThreadSafeNcVar backLWRadiationVar =  m_outputNetCDF->addVar("back_longwave_radiation", "double",
                                                                  std::vector<std::string>({"time", "elements"}));
-    backLWRadiationVar.putAtt("back_longwave_radiation:long_name", "Backwater longwave radiation");
-    backLWRadiationVar.putAtt("back_longwave_radiation:units", "W/m^2");
+    backLWRadiationVar.putAtt("long_name", "Back Longwave Radiation");
+    backLWRadiationVar.putAtt("units", "W/m^2");
     m_outNetCDFVariables["back_longwave_radiation"] = backLWRadiationVar;
 
     ThreadSafeNcVar sedNetSWSolarRadiationVar =  m_outputNetCDF->addVar("sediment_net_shortwave_solar_radiation", "double",
                                                                         std::vector<std::string>({"time", "elements"}));
-    sedNetSWSolarRadiationVar.putAtt("sediment_net_shortwave_solar_radiation:long_name", "Net shortwave solar radiation reaching sediment");
-    sedNetSWSolarRadiationVar.putAtt("sediment_net_shortwave_solar_radiation:units", "W/m^2");
+    sedNetSWSolarRadiationVar.putAtt("long_name", "Net Shortwave Solar Radiation Reaching Sediment");
+    sedNetSWSolarRadiationVar.putAtt("units", "W/m^2");
     m_outNetCDFVariables["sediment_net_shortwave_solar_radiation"] = sedNetSWSolarRadiationVar;
 
 
     ThreadSafeNcVar atmosphericLWRadiationVar =  m_outputNetCDF->addVar("atmospheric_longwave_radiation", "double",
                                                                         std::vector<std::string>({"time", "elements"}));
-    atmosphericLWRadiationVar.putAtt("atmospheric_longwave_radiation:long_name", "Atmospheric longwave radiation");
-    atmosphericLWRadiationVar.putAtt("atmospheric_longwave_radiation:units", "W/m^2");
+    atmosphericLWRadiationVar.putAtt("long_name", "Atmospheric Longwave Radiation");
+    atmosphericLWRadiationVar.putAtt("units", "W/m^2");
     m_outNetCDFVariables["atmospheric_longwave_radiation"] = atmosphericLWRadiationVar;
 
 
     ThreadSafeNcVar landCoverLWRadiationVar =  m_outputNetCDF->addVar("landcover_longwave_radiation", "double",
                                                                       std::vector<std::string>({"time", "elements"}));
-    landCoverLWRadiationVar.putAtt("landcover_longwave_radiation:long_name", "Landcover longwave radiation");
-    landCoverLWRadiationVar.putAtt("landcover_longwave_radiation:units", "W/m^2");
+    landCoverLWRadiationVar.putAtt("long_name", "Landcover Longwave Radiation");
+    landCoverLWRadiationVar.putAtt("units", "W/m^2");
     m_outNetCDFVariables["landcover_longwave_radiation"] = landCoverLWRadiationVar;
 
 
     ThreadSafeNcVar sumMCRadiationVar =  m_outputNetCDF->addVar("net_main_channel_radiation", "double",
                                                                 std::vector<std::string>({"time", "elements"}));
-    sumMCRadiationVar.putAtt("net_main_channel_radiation:long_name", "Net radiation reaching main channel");
-    sumMCRadiationVar.putAtt("net_main_channel_radiation:units", "W/m^2");
+    sumMCRadiationVar.putAtt("long_name", "Net Radiation Reaching Main Channel");
+    sumMCRadiationVar.putAtt("units", "W/m^2");
     m_outNetCDFVariables["net_main_channel_radiation"] = sumMCRadiationVar;
 
     m_outputNetCDF->sync();
