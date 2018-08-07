@@ -404,15 +404,15 @@ bool RHEModel::initializeNetCDFOutputFile(list<string> &errors)
     elementToJunction.putAtt("long_name", "Downstream Junction");
     m_outNetCDFVariables["to_junction"] = elementToJunction;
 
-    ThreadSafeNcVar elementsVar =  m_outputNetCDF->addVar("elements", NcType::nc_DOUBLE, elementsDim);
-    elementsVar.putAtt("long_name", "Distance");
-    elementsVar.putAtt("units", "m");
-    m_outNetCDFVariables["elements"] = elementsVar;
+    //    ThreadSafeNcVar elementsVar =  m_outputNetCDF->addVar("elements", NcType::nc_DOUBLE, elementsDim);
+    //    elementsVar.putAtt("long_name", "Distance");
+    //    elementsVar.putAtt("units", "m");
+    //    m_outNetCDFVariables["elements"] = elementsVar;
 
     int *fromJunctions = new int[m_elements.size()];
     int *toJunctions = new int[m_elements.size()];
     char **elementIds = new char *[m_elements.size()];
-    double *els = new double[m_elements.size()];
+    //    double *els = new double[m_elements.size()];
 
 #ifdef USE_OPENMP
 #pragma omp parallel for
@@ -426,18 +426,18 @@ bool RHEModel::initializeNetCDFOutputFile(list<string> &errors)
 
       fromJunctions[i] = element->upstreamJunction->index;
       toJunctions[i] = element->downstreamJunction->index;
-      els[i] = element->distanceFromUpStreamJunction;
+//      els[i] = element->distanceFromUpStreamJunction;
 
     }
 
     elementIdentifiers.putVar(elementIds);
     elementFromJunction.putVar(fromJunctions);
     elementToJunction.putVar(toJunctions);
-    elementsVar.putVar(els);
+//    elementsVar.putVar(els);
 
     delete[] fromJunctions;
     delete[] toJunctions;
-    delete[] els;
+//    delete[] els;
 
     for (int i = 0; i < (int)m_elements.size(); i++)
     {
@@ -459,11 +459,11 @@ bool RHEModel::initializeNetCDFOutputFile(list<string> &errors)
     widthVar.putAtt("units", "m");
     m_outNetCDFVariables["width"] = widthVar;
 
-    ThreadSafeNcVar temperatureVar =  m_outputNetCDF->addVar("channeltemperature", "double",
+    ThreadSafeNcVar temperatureVar =  m_outputNetCDF->addVar("channel_temperature", "double",
                                                              std::vector<std::string>({"time", "elements"}));
-    temperatureVar.putAtt("long_name", "Temperature");
+    temperatureVar.putAtt("long_name", "Channel Temperature");
     temperatureVar.putAtt("units", "°C");
-    m_outNetCDFVariables["channeltemperature"] = temperatureVar;
+    m_outNetCDFVariables["channel_temperature"] = temperatureVar;
 
 
     ThreadSafeNcVar incomingSWSolarRadiationVar =  m_outputNetCDF->addVar("incoming_shortwave_solar_radiation", "double",
@@ -1827,7 +1827,7 @@ void RHEModel::writeNetCDFOutput()
 
     m_outNetCDFVariables["width"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), width);
 
-    m_outNetCDFVariables["channeltemperature"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), temperature);
+    m_outNetCDFVariables["channel_temperature"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), temperature);
 
     m_outNetCDFVariables["net_main_channel_radiation"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), sumMCRadiation);
 
