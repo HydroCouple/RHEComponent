@@ -513,6 +513,14 @@ bool RHEModel::initializeNetCDFOutputFile(list<string> &errors)
     sumMCRadiationVar.putAtt("units", "W/m^2");
     m_outNetCDFVariables["net_main_channel_radiation"] = sumMCRadiationVar;
 
+
+    ThreadSafeNcVar shadeVar =  m_outputNetCDF->addVar("shade_factor", "double",
+                                                                std::vector<std::string>({"time", "elements"}));
+    shadeVar.putAtt("long_name", "Shade Factor");
+    shadeVar.putAtt("units", "W/m^2");
+    m_outNetCDFVariables["shade_factor"] = shadeVar;
+
+
     m_outputNetCDF->sync();
 
     returnValue = true;
@@ -1804,6 +1812,7 @@ void RHEModel::writeNetCDFOutput()
     double *atmosphericLWRadiation = new double[m_elements.size()];
     double *landCoverLWRadiation = new double[m_elements.size()];
     double *sumMCRadiation = new double[m_elements.size()];
+    double *shadeFactor = new double[m_elements.size()];
 
 #ifdef USE_OPENMP
 #pragma omp parallel for
@@ -1821,6 +1830,7 @@ void RHEModel::writeNetCDFOutput()
       atmosphericLWRadiation[i] = element->atmosphericLWRadiation;
       landCoverLWRadiation[i] = element->landCoverLWRadiation;
       sumMCRadiation[i] = element->netMCRadiation;
+      shadeFactor[i] = element->shadeFactor;
     }
 
     m_outNetCDFVariables["depth"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), depth);
@@ -1843,6 +1853,9 @@ void RHEModel::writeNetCDFOutput()
 
     m_outNetCDFVariables["landcover_longwave_radiation"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), landCoverLWRadiation);
 
+    m_outNetCDFVariables["shade_factor"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), shadeFactor);
+
+
 
     delete[] depth;
     delete[] width;
@@ -1854,6 +1867,7 @@ void RHEModel::writeNetCDFOutput()
     delete[] atmosphericLWRadiation;
     delete[] landCoverLWRadiation;
     delete[] sumMCRadiation;
+    delete[] shadeFactor;
 
     if(m_flushToDisk)
     {

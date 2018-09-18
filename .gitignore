@@ -45,3 +45,4 @@ CMakeLists.txt.user*
 *.pch
 *.lib
 *.ilk
+*.nc
