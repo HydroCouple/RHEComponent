@@ -395,15 +395,15 @@ bool RHEModel::initializeElements(std::list<string> &errors)
 
 bool RHEModel::initializeSolver(std::list<string> &errors)
 {
-//  m_heatSolver->setSize(m_elements.size());
-//  m_heatSolver->initialize();
+  //  m_heatSolver->setSize(m_elements.size());
+  //  m_heatSolver->initialize();
 
-//  for(size_t i = 0; i < m_soluteSolvers.size(); i++)
-//  {
-//    ODESolver *solver =  m_soluteSolvers[i];
-//    solver->setSize(m_elements.size());
-//    solver->initialize();
-//  }
+  //  for(size_t i = 0; i < m_soluteSolvers.size(); i++)
+  //  {
+  //    ODESolver *solver =  m_soluteSolvers[i];
+  //    solver->setSize(m_elements.size());
+  //    solver->initialize();
+  //  }
 
   return true;
 }
@@ -423,18 +423,25 @@ bool RHEModel::initializeBoundaryConditions(std::list<string> &errors)
 
 bool RHEModel::findProfile(Element *from, Element *to, std::list<Element *> &profile)
 {
-  for(Element *outgoing : from->downstreamJunction->outgoingElements)
+  if(from == to)
   {
-    if(outgoing == to)
+    profile.push_back(from);
+  }
+  else
+  {
+    for(Element *outgoing : from->downstreamJunction->outgoingElements)
     {
-      profile.push_back(from);
-      profile.push_back(outgoing);
-      return true;
-    }
-    else if(findProfile(outgoing, to, profile))
-    {
-      profile.push_front(from);
-      return true;
+      if(outgoing == to)
+      {
+        profile.push_back(from);
+        profile.push_back(outgoing);
+        return true;
+      }
+      else if(findProfile(outgoing, to, profile))
+      {
+        profile.push_back(from);
+        return true;
+      }
     }
   }
 
