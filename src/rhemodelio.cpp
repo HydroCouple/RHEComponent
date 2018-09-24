@@ -515,11 +515,17 @@ bool RHEModel::initializeNetCDFOutputFile(list<string> &errors)
 
 
     ThreadSafeNcVar shadeVar =  m_outputNetCDF->addVar("shade_factor", "double",
-                                                                std::vector<std::string>({"time", "elements"}));
+                                                       std::vector<std::string>({"time", "elements"}));
     shadeVar.putAtt("long_name", "Shade Factor");
-    shadeVar.putAtt("units", "W/m^2");
+    shadeVar.putAtt("units", "");
     m_outNetCDFVariables["shade_factor"] = shadeVar;
 
+
+    ThreadSafeNcVar shadeMultVar =  m_outputNetCDF->addVar("shade_factor_multiplier", "double",
+                                                       std::vector<std::string>({"time", "elements"}));
+    shadeMultVar.putAtt("long_name", "Shade Factor Multiplier");
+    shadeMultVar.putAtt("units", "");
+    m_outNetCDFVariables["shade_factor_multiplier"] = shadeMultVar;
 
     m_outputNetCDF->sync();
 
@@ -1813,6 +1819,7 @@ void RHEModel::writeNetCDFOutput()
     double *landCoverLWRadiation = new double[m_elements.size()];
     double *sumMCRadiation = new double[m_elements.size()];
     double *shadeFactor = new double[m_elements.size()];
+    double *shadeFactorMult = new double[m_elements.size()];
 
 #ifdef USE_OPENMP
 #pragma omp parallel for
@@ -1831,6 +1838,7 @@ void RHEModel::writeNetCDFOutput()
       landCoverLWRadiation[i] = element->landCoverLWRadiation;
       sumMCRadiation[i] = element->netMCRadiation;
       shadeFactor[i] = element->shadeFactor;
+      shadeFactorMult[i] = element->shadeFactorMultiplier;
     }
 
     m_outNetCDFVariables["depth"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), depth);
@@ -1855,6 +1863,8 @@ void RHEModel::writeNetCDFOutput()
 
     m_outNetCDFVariables["shade_factor"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), shadeFactor);
 
+    m_outNetCDFVariables["shade_factor_multiplier"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), shadeFactorMult);
+
 
 
     delete[] depth;
@@ -1868,6 +1878,7 @@ void RHEModel::writeNetCDFOutput()
     delete[] landCoverLWRadiation;
     delete[] sumMCRadiation;
     delete[] shadeFactor;
+    delete[] shadeFactorMult;
 
     if(m_flushToDisk)
     {
