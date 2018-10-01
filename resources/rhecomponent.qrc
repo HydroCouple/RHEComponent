@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/RHEComponent">
+        <file alias="rhecomponenticon">images/rhecomponenticon.png</file>
+    </qresource>
+</RCC>

@@ -334,3 +334,6 @@ CONFIG(release, debug|release) {
         }
     }
 }
+
+RESOURCES += \
+             ./resources/rhecomponent.qrc

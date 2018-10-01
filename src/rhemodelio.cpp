@@ -1865,8 +1865,6 @@ void RHEModel::writeNetCDFOutput()
 
     m_outNetCDFVariables["shade_factor_multiplier"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), shadeFactorMult);
 
-
-
     delete[] depth;
     delete[] width;
     delete[] temperature;
