@@ -32,7 +32,7 @@ RHEComponentInfo::RHEComponentInfo(QObject *parent)
   setId("Radiative Heat Exchange Model 1.0.0");
   setCaption("RHE Component");
   setIconFilePath(":/RHEComponent/rhecomponenticon");
-  setDescription("A one-dimensional channel heat and solute transport model.");
+  setDescription("A radiative heat exchange component for channel heat transport modeling");
   setCategory("Hydrodyanmics\\Heat Transport");
   setCopyright("");
   setVendor("");
