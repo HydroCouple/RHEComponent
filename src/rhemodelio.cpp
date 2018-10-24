@@ -323,7 +323,7 @@ bool RHEModel::initializeNetCDFOutputFile(list<string> &errors)
 
     //time variable
     ThreadSafeNcDim timeDim =  m_outputNetCDF->addDim("time");
-    ThreadSafeNcVar timeVar =  m_outputNetCDF->addVar("time", NcType::nc_DOUBLE, timeDim);
+    ThreadSafeNcVar timeVar =  m_outputNetCDF->addVar("time", NcType::nc_FLOAT, timeDim);
     timeVar.putAtt("long_name", "Time");
     timeVar.putAtt("standard_name", "time");
     timeVar.putAtt("calendar", "julian");
@@ -337,17 +337,17 @@ bool RHEModel::initializeNetCDFOutputFile(list<string> &errors)
     junctionIdentifiers.putAtt("long_name", "Element Junction Identifier");
     m_outNetCDFVariables["element_junction_id"] = junctionIdentifiers;
 
-    ThreadSafeNcVar junctionX =  m_outputNetCDF->addVar("x", NcType::nc_DOUBLE, junctionDim);
+    ThreadSafeNcVar junctionX =  m_outputNetCDF->addVar("x", NcType::nc_FLOAT, junctionDim);
     junctionX.putAtt("long_name", "Junction X-Coordinate");
     junctionX.putAtt("units", "m");
     m_outNetCDFVariables["x"] = junctionX;
 
-    ThreadSafeNcVar junctionY =  m_outputNetCDF->addVar("y", NcType::nc_DOUBLE, junctionDim);
+    ThreadSafeNcVar junctionY =  m_outputNetCDF->addVar("y", NcType::nc_FLOAT, junctionDim);
     junctionY.putAtt("long_name", "Junction Y-Zoordinate");
     junctionY.putAtt("units", "m");
     m_outNetCDFVariables["y"] = junctionY;
 
-    ThreadSafeNcVar junctionZ =  m_outputNetCDF->addVar("z", NcType::nc_DOUBLE, junctionDim);
+    ThreadSafeNcVar junctionZ =  m_outputNetCDF->addVar("z", NcType::nc_FLOAT, junctionDim);
     junctionZ.putAtt("long_name", "junction z-coordinate");
     junctionZ.putAtt("units", "m");
     m_outNetCDFVariables["z"] = junctionZ;
@@ -404,7 +404,7 @@ bool RHEModel::initializeNetCDFOutputFile(list<string> &errors)
     elementToJunction.putAtt("long_name", "Downstream Junction");
     m_outNetCDFVariables["to_junction"] = elementToJunction;
 
-    //    ThreadSafeNcVar elementsVar =  m_outputNetCDF->addVar("elements", NcType::nc_DOUBLE, elementsDim);
+    //    ThreadSafeNcVar elementsVar =  m_outputNetCDF->addVar("elements", NcType::NC_FLOAT, elementsDim);
     //    elementsVar.putAtt("long_name", "Distance");
     //    elementsVar.putAtt("units", "m");
     //    m_outNetCDFVariables["elements"] = elementsVar;
