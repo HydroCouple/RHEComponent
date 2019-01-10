@@ -49,11 +49,10 @@ HEADERS += ./include/stdafx.h\
            ./include/iboundarycondition.h \
            ./include/elementjunction.h \
            ./include/element.h \
-           ./include/abstracttimeseriesbc.h \
-           ./include/hydraulicstimeseriesbc.h \
-           ./include/meteorologytimeseriesbc.h \
-           ./include/radiativefluxtimeseriesbc.h \
-           ./include/elementtimeseriesbc.h \
+           ./include/hydraulicsbc.h \
+           ./include/meteorologybc.h \
+           ./include/radiativefluxbc.h \
+           ./include/elementbc.h \
            ./include/elementoutput.h
 
 
@@ -69,11 +68,10 @@ SOURCES +=./src/stdafx.cpp \
           ./src/element.cpp \
           ./src/rhecompute.cpp \
           ./src/rhemodelio.cpp \
-          ./src/hydraulicstimeseriesbc.cpp \
-          ./src/radiativefluxtimeseriesbc.cpp \
-          ./src/abstracttimeseriesbc.cpp \
-          ./src/elementtimeseriesbc.cpp \
-          ./src/meteorologytimeseriesbc.cpp \
+          ./src/hydraulicsbc.cpp \
+          ./src/radiativefluxbc.cpp \
+          ./src/elementbc.cpp \
+          ./src/meteorologybc.cpp \
           ./src/elementoutput.cpp
 
 

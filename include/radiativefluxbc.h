@@ -20,15 +20,26 @@
 #ifndef RADIATIVEFLUXTIMESERIESBC_H
 #define RADIATIVEFLUXTIMESERIESBC_H
 
-#include "abstracttimeseriesbc.h"
+#include "iboundarycondition.h"
+#include "rhecomponent_global.h"
 
-class RHECOMPONENT_EXPORT RadiativeFluxTimeSeriesBC : public AbstractTimeSeriesBC
+#include <QObject>
+#include <QSharedPointer>
+
+struct Element;
+class TimeSeries;
+class HTSModel;
+class DataCursor;
+class RHEModel;
+
+class RHECOMPONENT_EXPORT RadiativeFluxBC: public QObject,
+    public virtual IBoundaryCondition
 {
   public:
 
-    RadiativeFluxTimeSeriesBC(Element *element, RHEModel *model);
+    RadiativeFluxBC(Element *startElement, Element *endElement, RHEModel *model);
 
-    virtual ~RadiativeFluxTimeSeriesBC();
+    virtual ~RadiativeFluxBC();
 
     void  findAssociatedGeometries() override final;
 
@@ -36,30 +47,7 @@ class RHECOMPONENT_EXPORT RadiativeFluxTimeSeriesBC : public AbstractTimeSeriesB
 
     void applyBoundaryConditions(double dateTime) override final;
 
-    Element *element() const;
-
-    void setElement(Element *element);
-
-  private:
-
-    Element *m_element;
-
-};
-
-
-class RHECOMPONENT_EXPORT UniformRadiativeFluxTimeSeriesBC : public AbstractTimeSeriesBC
-{
-  public:
-
-    UniformRadiativeFluxTimeSeriesBC(Element *startElement, Element *endElement, RHEModel *model);
-
-    virtual ~UniformRadiativeFluxTimeSeriesBC();
-
-    void  findAssociatedGeometries() override final;
-
-    void prepare() override final;
-
-    void applyBoundaryConditions(double dateTime) override final;
+    void clear() override final;
 
     Element *startElement() const;
 
@@ -69,10 +57,17 @@ class RHECOMPONENT_EXPORT UniformRadiativeFluxTimeSeriesBC : public AbstractTime
 
     void setEndElement(Element *element);
 
+    QSharedPointer<TimeSeries> timeSeries() const;
+
+    void setTimeSeries(const QSharedPointer<TimeSeries> &timeseries);
+
   private:
 
-    std::list<Element*> m_profile;
+    std::vector<Element*> m_profile;
     Element *m_startElement, *m_endElement;
+    DataCursor *m_dataCursor;
+    QSharedPointer<TimeSeries> m_timeSeries;
+    RHEModel *m_model;
 
 };
 

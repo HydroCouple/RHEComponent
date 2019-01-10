@@ -41,6 +41,7 @@ class RHECOMPONENT_EXPORT RHEComponent : public AbstractTimeModelComponent,
 
     Q_INTERFACES(HydroCouple::ICloneableModelComponent)
 
+
   public:
 
     /*!

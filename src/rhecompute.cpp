@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "rhemodel.h"
 #include "element.h"
 #include "elementjunction.h"

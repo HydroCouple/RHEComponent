@@ -43,6 +43,7 @@ class Edge;
 class RHEModel;
 class IBoundaryCondition;
 class ThreadSafeNcFile;
+class TimeSeries;
 
 struct RHECOMPONENT_EXPORT SolverUserData
 {
@@ -58,10 +59,10 @@ class RHECOMPONENT_EXPORT RHEModel : public QObject
 
     friend struct ElementJunction;
     friend struct Element;
-    friend class UniformRadiativeFluxTimeSeriesBC;
-    friend class NonPointSrcTimeSeriesBC;
-    friend class UniformHydraulicsTimeSeriesBC;
-    friend class UniformMeteorologyTimeSeriesBC;
+    friend class RadiativeFluxBC;
+    friend class ElementBC;
+    friend class HydraulicsBC;
+    friend class MeteorologyBC;
 
   public:
 
@@ -488,11 +489,6 @@ class RHECOMPONENT_EXPORT RHEModel : public QObject
      */
     bool readInputFileOutputTag(const QString &line, QString &errorMessage);
 
-    /*!
-     * \brief readInputFileSolutesTag
-     * \param line
-     */
-    bool readInputFileSolutesTag(const QString &line, QString &errorMessage);
 
     /*!
      * \brief readInputFileElementJunctionsTag
@@ -510,7 +506,7 @@ class RHECOMPONENT_EXPORT RHEModel : public QObject
      * \brief readInputFileBoundaryConditionsTag
      * \param line
      */
-    bool readInputFileBoundaryConditionsTag(const QString &line, QString &errorMessage);
+    bool readInputFileElementBCTag(const QString &line, QString &errorMessage);
 
     /*!
      * \brief readInputFileUniformHydraulicsTag
@@ -518,13 +514,7 @@ class RHECOMPONENT_EXPORT RHEModel : public QObject
      * \param errorMessage
      * \return
      */
-    bool readInputFileUniformHydraulicsTag(const QString &line, QString &errorMessage);
-
-    /*!
-     * \brief readInputFileNonUniformHydraulicsTag
-     * \param line
-     */
-    bool readInputFileNonUniformHydraulicsTag(const QString &line, QString &errorMessage);
+    bool readInputFileHydraulicsTag(const QString &line, QString &errorMessage);
 
     /*!
      * \brief readInputFileRadiativeFluxesTag
@@ -532,15 +522,7 @@ class RHECOMPONENT_EXPORT RHEModel : public QObject
      * \param errorMessage
      * \return
      */
-    bool readInputFileUniformRadiativeFluxesTag(const QString &line, QString &errorMessage);
-
-    /*!
-     * \brief readInputFileNonUniformRadiativeFluxesTag
-     * \param line
-     * \param errorMessage
-     * \return
-     */
-    bool readInputFileNonUniformRadiativeFluxesTag(const QString &line, QString &errorMessage);
+    bool readInputFileRadiativeFluxesTag(const QString &line, QString &errorMessage);
 
     /*!
      * \brief readInputFileUniformMeteorologyTag
@@ -548,15 +530,15 @@ class RHECOMPONENT_EXPORT RHEModel : public QObject
      * \param errorMessage
      * \return
      */
-    bool readInputFileUniformMeteorologyTag(const QString &line, QString &errorMessage);
+    bool readInputFileMeteorologyTag(const QString &line, QString &errorMessage);
 
     /*!
-     * \brief readInputFileNonUniformMeteorologyTag
+     * \brief readInputFileTimeSeriesTag
      * \param line
      * \param errorMessage
      * \return
      */
-    bool readInputFileNonUniformMeteorologyTag(const QString &line, QString &errorMessage);
+    bool readInputFileTimeSeriesTag(const QString &line, QString &errorMessage);
 
     /*!
      * \brief writeOutput
@@ -603,7 +585,7 @@ class RHECOMPONENT_EXPORT RHEModel : public QObject
      * \param m_profile
      * \return
      */
-    bool findProfile(Element *from, Element *to, std::list<Element*> &profile);
+    bool findProfile(Element *from, Element *to, std::vector<Element*> &profile);
 
 
     /*!
@@ -629,6 +611,7 @@ class RHECOMPONENT_EXPORT RHEModel : public QObject
     m_flushToDiskFrequency, // Number of times to write output stored in memory to disk
     m_currentflushToDiskCount; //Number of timesteps that have been stored in memory so far since the last flush to disk
 
+    std::unordered_map<std::string, QSharedPointer<TimeSeries>> m_timeSeries;
 
     bool m_verbose, //Print simulation information to console
     m_flushToDisk;

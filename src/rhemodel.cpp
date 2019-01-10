@@ -16,7 +16,7 @@
 *  \todo
 *  \warning
 */
-
+#include "stdafx.h"
 #include "rhemodel.h"
 #include "rhecomponent.h"
 #include "spatial/point.h"
@@ -69,6 +69,7 @@ RHEModel::~RHEModel()
   m_elementJunctions.clear();
   m_elementJunctionsById.clear();
 
+  m_timeSeries.clear();
 
   closeOutputFiles();
 
@@ -421,7 +422,7 @@ bool RHEModel::initializeBoundaryConditions(std::list<string> &errors)
   return true;
 }
 
-bool RHEModel::findProfile(Element *from, Element *to, std::list<Element *> &profile)
+bool RHEModel::findProfile(Element *from, Element *to, std::vector<Element *> &profile)
 {
   if(from == to)
   {
@@ -439,7 +440,7 @@ bool RHEModel::findProfile(Element *from, Element *to, std::list<Element *> &pro
       }
       else if(findProfile(outgoing, to, profile))
       {
-        profile.push_back(from);
+        profile.insert(profile.begin(), from);
         return true;
       }
     }
