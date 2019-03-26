@@ -99,7 +99,6 @@ class RHECOMPONENT_EXPORT ElementInput : public TimeGeometryMultiInputDouble
   private:
 
     std::unordered_map<HydroCouple::IOutput*, std::unordered_map<int,int>> m_geometryMapping;
-//    std::unordered_map<HydroCouple::IOutput*, std::unordered_map<int,double>> m_geometryMappingOrientation;
     RHEComponent *m_component;
     VariableType m_varType;
 

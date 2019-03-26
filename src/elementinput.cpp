@@ -26,6 +26,7 @@
 #include "rhemodel.h"
 #include "element.h"
 #include "temporal/timedata.h"
+#include "hydrocoupletemporal.h"
 
 #include <QDebug>
 #include <omp.h>
@@ -33,7 +34,7 @@
 using namespace HydroCouple;
 using namespace HydroCouple::Spatial;
 using namespace HydroCouple::SpatioTemporal;
-
+using namespace HydroCouple::Temporal;
 
 ElementInput::ElementInput(const QString &id,
                            Dimension *timeDimension,
@@ -56,6 +57,7 @@ bool ElementInput::addProvider(HydroCouple::IOutput *provider)
   {
     ITimeGeometryComponentDataItem *timeGeometryDataItem = nullptr;
     IGeometryComponentDataItem *geometryDataItem = nullptr;
+    ITimeIdBasedComponentDataItem *timeIdBaseDataItem = nullptr;
 
     if((timeGeometryDataItem = dynamic_cast<ITimeGeometryComponentDataItem*>(provider)))
     {
@@ -90,14 +92,14 @@ bool ElementInput::addProvider(HydroCouple::IOutput *provider)
                 if( deltap1p1 < 1e-3 && deltap2p2 < 1e-3)
                 {
                   m_geometryMapping[provider][i] = j;
-//                  m_geometryMappingOrientation[provider][i] = 1.0;
+                  //                  m_geometryMappingOrientation[provider][i] = 1.0;
                   mapped[j] = true;
                   break;
                 }
                 else if(deltap1p2 < 1e-3 &&  deltap2p1 < 1e-3)
                 {
                   m_geometryMapping[provider][i] = j;
-//                  m_geometryMappingOrientation[provider][i] = -1.0;
+                  //                  m_geometryMappingOrientation[provider][i] = -1.0;
                   mapped[j] = true;
                   break;
                 }
@@ -142,18 +144,45 @@ bool ElementInput::addProvider(HydroCouple::IOutput *provider)
                 if( deltap1p1 < 1e-3 && deltap2p2 < 1e-3)
                 {
                   m_geometryMapping[provider][i] = j;
-//                  m_geometryMappingOrientation[provider][i] = 1.0;
                   mapped[j] = true;
                   break;
                 }
                 else if(deltap1p2 < 1e-3 &&  deltap2p1 < 1e-3)
                 {
                   m_geometryMapping[provider][i] = j;
-//                  m_geometryMappingOrientation[provider][i] = -1.0;
                   mapped[j] = true;
                   break;
                 }
               }
+            }
+          }
+        }
+      }
+
+      return true;
+    }
+    else if((timeIdBaseDataItem = dynamic_cast<ITimeIdBasedComponentDataItem*>(provider)))
+    {
+
+      QStringList identifiers = timeIdBaseDataItem->identifiers();
+
+      if(identifiers.size())
+      {
+        std::vector<bool> mapped(identifiers.size(), false);
+
+        for(int i = 0; i < geometryCount() ; i++)
+        {
+          HCLineString *lineString = dynamic_cast<HCLineString*>(getGeometry(i));
+
+          for(int j = 0; j < identifiers.size(); j++)
+          {
+            QString identifier = identifiers[j];
+
+            if(!mapped[j] && !identifier.compare(lineString->id()))
+            {
+              m_geometryMapping[provider][i] = j;
+              mapped[j] = true;
+              break;
             }
           }
         }
@@ -171,7 +200,7 @@ bool ElementInput::removeProvider(HydroCouple::IOutput *provider)
   if(AbstractMultiInput::removeProvider(provider))
   {
     m_geometryMapping.erase(provider);
-//    m_geometryMappingOrientation.erase(provider);
+    //    m_geometryMappingOrientation.erase(provider);
     return true;
   }
 
@@ -182,6 +211,7 @@ bool ElementInput::canConsume(HydroCouple::IOutput *provider, QString &message) 
 {
   ITimeGeometryComponentDataItem *timeGeometryDataItem = nullptr;
   IGeometryComponentDataItem *geometryDataItem = nullptr;
+  ITimeIdBasedComponentDataItem *timeIdBaseDataItem = nullptr;
 
   if((timeGeometryDataItem = dynamic_cast<ITimeGeometryComponentDataItem*>(provider)) &&
      (timeGeometryDataItem->geometryType() == IGeometry::LineString ||
@@ -198,6 +228,10 @@ bool ElementInput::canConsume(HydroCouple::IOutput *provider, QString &message) 
            geometryDataItem->geometryType() == IGeometry::LineStringZM) &&
           (provider->valueDefinition()->type() == QVariant::Double ||
            provider->valueDefinition()->type() == QVariant::Int))
+  {
+    return true;
+  }
+  else if((timeIdBaseDataItem = dynamic_cast<ITimeIdBasedComponentDataItem*>(provider)))
   {
     return true;
   }
@@ -227,10 +261,11 @@ void ElementInput::applyData()
   {
 
     std::unordered_map<int,int>& geomap = m_geometryMapping[provider];
-//    std::unordered_map<int,double>& geoorient = m_geometryMappingOrientation[provider];
+    //    std::unordered_map<int,double>& geoorient = m_geometryMappingOrientation[provider];
 
     ITimeGeometryComponentDataItem *timeGeometryDataItem = nullptr;
     IGeometryComponentDataItem *geometryDataItem = nullptr;
+    ITimeIdBasedComponentDataItem *timeIdBaseDataItem = nullptr;
 
     if((timeGeometryDataItem = dynamic_cast<ITimeGeometryComponentDataItem*>(provider)))
     {
@@ -492,6 +527,195 @@ void ElementInput::applyData()
           break;
       }
     }
+    else if((timeIdBaseDataItem = dynamic_cast<ITimeIdBasedComponentDataItem*>(provider)))
+    {
+      int currentTimeIndex = timeIdBaseDataItem->timeCount() - 1;
+      int previousTimeIndex = std::max(0 , timeIdBaseDataItem->timeCount() - 2);
+
+      double providerCurrentTime = timeIdBaseDataItem->time(currentTimeIndex)->julianDay();
+      double providerPreviousTime = timeIdBaseDataItem->time(previousTimeIndex)->julianDay();
+
+      if(currentTime >=  providerPreviousTime && currentTime <= providerCurrentTime)
+      {
+        double factor = 0.0;
+
+        if(providerCurrentTime > providerPreviousTime)
+        {
+          double denom = providerCurrentTime - providerPreviousTime;
+          double numer = currentTime - providerPreviousTime;
+          factor = numer / denom;
+        }
+
+        switch (m_varType)
+        {
+          case Depth:
+            {
+              for(auto it : geomap)
+              {
+                double value1 = 0;
+                double value2 = 0;
+
+                timeIdBaseDataItem->getValue(currentTimeIndex,it.second, &value1);
+                timeIdBaseDataItem->getValue(previousTimeIndex,it.second, &value2);
+
+                Element *element =  m_component->modelInstance()->getElement(it.first);
+                element->channelDepth = value2 + factor *(value1 - value2);
+              }
+            }
+            break;
+          case TopWidth:
+            {
+              for(auto it : geomap)
+              {
+                double value1 = 0;
+                double value2 = 0;
+
+                timeIdBaseDataItem->getValue(currentTimeIndex,it.second, &value1);
+                timeIdBaseDataItem->getValue(previousTimeIndex,it.second, &value2);
+
+                Element *element =  m_component->modelInstance()->getElement(it.first);
+                element->channelWidth = value2 + factor *(value1 - value2);
+              }
+            }
+            break;
+          case Temperature:
+            {
+              for(auto it : geomap)
+              {
+                double value1 = 0;
+                double value2 = 0;
+
+                timeIdBaseDataItem->getValue(currentTimeIndex,it.second, &value1);
+                timeIdBaseDataItem->getValue(previousTimeIndex,it.second, &value2);
+
+                Element *element =  m_component->modelInstance()->getElement(it.first);
+                element->channelTemperature = value2 + factor *(value1 - value2);
+              }
+
+            }
+            break;
+          case SkyviewFactor:
+            {
+              for(auto it : geomap)
+              {
+                double value1 = 0;
+                double value2 = 0;
+
+                timeIdBaseDataItem->getValue(currentTimeIndex,it.second, &value1);
+                timeIdBaseDataItem->getValue(previousTimeIndex,it.second, &value2);
+
+                Element *element =  m_component->modelInstance()->getElement(it.first);
+                element->skyViewFactor = value2 + factor *(value1 - value2);
+              }
+
+            }
+            break;
+          case ShadeFactor:
+            {
+              for(auto it : geomap)
+              {
+                double value1 = 0;
+                double value2 = 0;
+
+                timeIdBaseDataItem->getValue(currentTimeIndex,it.second, &value1);
+                timeIdBaseDataItem->getValue(previousTimeIndex,it.second, &value2);
+
+                Element *element =  m_component->modelInstance()->getElement(it.first);
+                element->shadeFactor = value2 + factor *(value1 - value2);
+              }
+            }
+            break;
+          case ShadeFactorMultiplier:
+            {
+              for(auto it : geomap)
+              {
+                double value1 = 0;
+                double value2 = 0;
+
+                timeIdBaseDataItem->getValue(currentTimeIndex,it.second, &value1);
+                timeIdBaseDataItem->getValue(previousTimeIndex,it.second, &value2);
+
+                Element *element =  m_component->modelInstance()->getElement(it.first);
+                element->shadeFactorMultiplier = value2 + factor *(value1 - value2);
+              }
+            }
+            break;
+        }
+      }
+      else
+      {
+        switch (m_varType)
+        {
+          case Depth:
+            {
+              for(auto it : geomap)
+              {
+                double value = 0;
+                timeIdBaseDataItem->getValue(currentTimeIndex,it.second, & value);
+                Element *element =  m_component->modelInstance()->getElement(it.first);
+                element->channelDepth = value;
+              }
+            }
+            break;
+          case TopWidth:
+            {
+              for(auto it : geomap)
+              {
+                double value = 0;
+                timeIdBaseDataItem->getValue(currentTimeIndex,it.second, & value);
+                Element *element =  m_component->modelInstance()->getElement(it.first);
+                element->channelWidth = value;
+              }
+            }
+            break;
+          case Temperature:
+            {
+              for(auto it : geomap)
+              {
+                double value = 0;
+                timeIdBaseDataItem->getValue(currentTimeIndex,it.second, & value);
+                Element *element =  m_component->modelInstance()->getElement(it.first);
+                element->channelTemperature = value;
+              }
+            }
+            break;
+          case SkyviewFactor:
+            {
+              for(auto it : geomap)
+              {
+                double value = 0;
+                timeIdBaseDataItem->getValue(currentTimeIndex,it.second, & value);
+                Element *element =  m_component->modelInstance()->getElement(it.first);
+                element->skyViewFactor = value;
+              }
+            }
+            break;
+          case ShadeFactor:
+            {
+              for(auto it : geomap)
+              {
+                double value = 0;
+                timeIdBaseDataItem->getValue(currentTimeIndex,it.second, & value);
+                Element *element =  m_component->modelInstance()->getElement(it.first);
+                element->shadeFactor = value;
+              }
+            }
+            break;
+          case ShadeFactorMultiplier:
+            {
+              for(auto it : geomap)
+              {
+                double value = 0;
+                timeIdBaseDataItem->getValue(currentTimeIndex,it.second, & value);
+                Element *element =  m_component->modelInstance()->getElement(it.first);
+                element->shadeFactorMultiplier = value;
+              }
+            }
+            break;
+        }
+      }
+    }
+
   }
 }
 

@@ -124,12 +124,7 @@ void Element::computeAtmosphericLWRadiation()
   double emiss = model->m_atmEmissCoeff + 0.0027 * sqrt(vaporPressureAir * 1000);
 
   atmosphericLWRadiation = model->m_stefanBoltzmannConst * (airTempK * airTempK * airTempK * airTempK) *
-                           emiss * (1.0 - model->m_atmLWReflection);
-
-  //  double esatair = 4.596 * exp(17.27 * airTemperature / (237.3 + airTemperature));
-  //  double eair = relativeHumidity * esatair / 100.0;
-  //  atmosphericLWRadiation = 0.000000117 * (airTempK * airTempK * airTempK * airTempK) * (0.5 + 0.031 *  sqrt(eair)) * (1. - model->m_atmLWReflection);
-  //  atmosphericLWRadiation *= 4.184 * 10000.0  / 86400.0;
+                           emiss * (1.0 - model->m_atmLWReflection) * skyViewFactor;
 }
 
 void Element::computeLandCoverLWRadiation()
