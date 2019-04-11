@@ -1639,6 +1639,7 @@ const unordered_map<string, int> RHEModel::m_hydraulicVariableFlags({{"DEPTH", 1
 const unordered_map<string, int> RHEModel::m_meteorologicalVariableFlags({
                                                                            {"RELATIVE_HUMIDITY", 1},
                                                                            {"AIR_TEMPERATURE", 2},
+                                                                           {"LANDCOVER_TEMPERATURE", 4},
                                                                          });
 
 const QRegExp RHEModel::m_dateTimeDelim("(\\,|\\t|\\\n|\\/|\\s+|\\:)");

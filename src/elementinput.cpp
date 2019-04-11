@@ -334,6 +334,22 @@ void ElementInput::applyData()
 
             }
             break;
+          case LCTemperature:
+            {
+              for(auto it : geomap)
+              {
+                double value1 = 0;
+                double value2 = 0;
+
+                timeGeometryDataItem->getValue(currentTimeIndex,it.second, &value1);
+                timeGeometryDataItem->getValue(previousTimeIndex,it.second, &value2);
+
+                Element *element =  m_component->modelInstance()->getElement(it.first);
+                element->landCoverTemperature = value2 + factor *(value1 - value2);
+              }
+
+            }
+            break;
           case SkyviewFactor:
             {
               for(auto it : geomap)
@@ -416,6 +432,17 @@ void ElementInput::applyData()
                 timeGeometryDataItem->getValue(currentTimeIndex,it.second, & value);
                 Element *element =  m_component->modelInstance()->getElement(it.first);
                 element->channelTemperature = value;
+              }
+            }
+            break;
+          case LCTemperature:
+            {
+              for(auto it : geomap)
+              {
+                double value = 0;
+                timeGeometryDataItem->getValue(currentTimeIndex,it.second, & value);
+                Element *element =  m_component->modelInstance()->getElement(it.first);
+                element->landCoverTemperature = value;
               }
             }
             break;

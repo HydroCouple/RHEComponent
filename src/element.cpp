@@ -39,6 +39,7 @@ Element::Element(const std::string &id, ElementJunction *upstream, ElementJuncti
     vaporPressureAir(0.0),
     windSpeed(0.0),
     airTemperature(0.0),
+    landCoverTemperature(0.0),
     incomingSWSolarRadiation(0.0),
     skyViewFactor(1.0),
     shadeFactor(0.0),
@@ -129,8 +130,8 @@ void Element::computeAtmosphericLWRadiation()
 
 void Element::computeLandCoverLWRadiation()
 {
-  double airTempK = airTemperature + 273.15;
-  landCoverLWRadiation = landCoverEmiss * model->m_stefanBoltzmannConst * (1.0 - skyViewFactor) * (airTempK * airTempK * airTempK * airTempK);
+  double landCoverTempK = landCoverTemperature + 273.15;
+  landCoverLWRadiation = landCoverEmiss * model->m_stefanBoltzmannConst * (1.0 - skyViewFactor) * (landCoverTempK * landCoverTempK * landCoverTempK * landCoverTempK);
 }
 
 void Element::computeRadiationBalance(double timeStep)

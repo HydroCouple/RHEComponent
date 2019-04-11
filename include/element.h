@@ -129,6 +129,12 @@ struct RHECOMPONENT_EXPORT Element
     */
     double airTemperature;
 
+
+    /*!
+     * \brief landCoverTemperature (C)
+     */
+    double landCoverTemperature;
+
     /*!
     * \brief inComingSolarRadiation (W/m^2)
     */

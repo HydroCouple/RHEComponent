@@ -41,6 +41,7 @@ class RHECOMPONENT_EXPORT ElementInput : public TimeGeometryMultiInputDouble
       TopWidth,
       SkyviewFactor,
       Temperature,
+      LCTemperature,
       ShadeFactor,
       ShadeFactorMultiplier,
     };

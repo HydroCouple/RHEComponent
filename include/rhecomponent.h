@@ -163,6 +163,10 @@ class RHECOMPONENT_EXPORT RHEComponent : public AbstractTimeModelComponent,
      */
     void createTemperatureInput();
 
+    /*!
+     * \brief createLandCoverTemperatureInput
+     */
+    void createLandCoverTemperatureInput();
 
     /*!
      * \brief createSkyViewFactorInput

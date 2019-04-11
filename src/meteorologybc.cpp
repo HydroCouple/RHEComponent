@@ -91,6 +91,17 @@ void MeteorologyBC::applyBoundaryConditions(double dateTime)
           }
         }
         break;
+      case 4:
+        {
+          for(size_t i = 0; i < m_profile.size(); i++)
+          {
+            if(m_timeSeries->interpolate(dateTime, i, m_dataCursor, value))
+            {
+              m_profile[i]->landCoverTemperature = value;
+            }
+          }
+        }
+        break;
     }
   }
   else
@@ -120,6 +131,14 @@ void MeteorologyBC::applyBoundaryConditions(double dateTime)
             for(size_t i = 0; i < m_profile.size(); i++)
             {
               m_profile[i]->windSpeed = value;
+            }
+          }
+          break;
+        case 4:
+          {
+            for(size_t i = 0; i < m_profile.size(); i++)
+            {
+              m_profile[i]->landCoverTemperature = value;
             }
           }
           break;

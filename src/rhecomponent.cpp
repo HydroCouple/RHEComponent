@@ -437,6 +437,7 @@ void RHEComponent::createInputs()
   createDepthInput();
   createTopWidthInput();
   createTemperatureInput();
+  createLandCoverTemperatureInput();
   createSkyViewFactorInput();
   createShadeFactorInput();
   createShadeFactorMultiplierInput();
@@ -533,6 +534,37 @@ void RHEComponent::createTemperatureInput()
   m_channelTemperatureInput->addTime(dt2);
 
   addInput(m_channelTemperatureInput);
+}
+
+void RHEComponent::createLandCoverTemperatureInput()
+{
+  Quantity *temperatureQuantity = new Quantity(QVariant::Double, m_temperatureUnit, this);
+
+  ElementInput *lcTemperatureInput = new ElementInput("LCTemperatureInput",
+                                               m_timeDimension,
+                                               m_geometryDimension,
+                                               temperatureQuantity,
+                                               ElementInput::LCTemperature,
+                                               this);
+
+  lcTemperatureInput->setCaption("Land Cover Temperature Input (°C)");
+
+  QList<QSharedPointer<HCGeometry>> geometries;
+
+  for(const QSharedPointer<HCGeometry> &lineString : m_elementGeometries)
+  {
+    geometries.append(lineString);
+  }
+
+  lcTemperatureInput->addGeometries(geometries);
+
+  SDKTemporal::DateTime *dt1 = new SDKTemporal::DateTime(m_modelInstance->currentDateTime()- 1.0/1000000.0, lcTemperatureInput);
+  SDKTemporal::DateTime *dt2 = new SDKTemporal::DateTime(m_modelInstance->currentDateTime(), lcTemperatureInput);
+
+  lcTemperatureInput->addTime(dt1);
+  lcTemperatureInput->addTime(dt2);
+
+  addInput(lcTemperatureInput);
 }
 
 void RHEComponent::createSkyViewFactorInput()
