@@ -462,6 +462,17 @@ bool RHEModel::initializeNetCDFOutputFile(list<string> &errors)
     temperatureVar.putAtt("units", "°C");
     m_outNetCDFVariables["channel_temperature"] = temperatureVar;
 
+    ThreadSafeNcVar airTemperatureVar =  m_outputNetCDF->addVar("air_temperature", "float",
+                                                             std::vector<std::string>({"time", "elements"}));
+    airTemperatureVar.putAtt("long_name", "Air Temperature");
+    airTemperatureVar.putAtt("units", "°C");
+    m_outNetCDFVariables["air_temperature"] = airTemperatureVar;
+
+    ThreadSafeNcVar landCoverTemperatureVar =  m_outputNetCDF->addVar("landcover_temperature", "float",
+                                                             std::vector<std::string>({"time", "elements"}));
+    landCoverTemperatureVar.putAtt("long_name", "Landcover Temperature");
+    landCoverTemperatureVar.putAtt("units", "°C");
+    m_outNetCDFVariables["landcover_temperature"] = landCoverTemperatureVar;
 
     ThreadSafeNcVar incomingSWSolarRadiationVar =  m_outputNetCDF->addVar("incoming_shortwave_solar_radiation", "float",
                                                                           std::vector<std::string>({"time", "elements"}));
@@ -1476,6 +1487,8 @@ void RHEModel::writeNetCDFOutput()
     float *depth = new float[m_elements.size()];
     float *width = new float[m_elements.size()];
     float *temperature = new float[m_elements.size()];
+    float *airTemperature = new float[m_elements.size()];
+    float *landCoverTemperature = new float[m_elements.size()];
     float *incomingSWSolarRadiation = new float[m_elements.size()];
     float *netSWSolarRadiation = new float[m_elements.size()];
     float *backwaterLWRadiation = new float[m_elements.size()];
@@ -1495,6 +1508,8 @@ void RHEModel::writeNetCDFOutput()
       depth[i] = element->channelDepth;
       width[i] = element->channelWidth;
       temperature[i] = element->channelTemperature;
+      airTemperature[i] = element->airTemperature;
+      landCoverTemperature[i] = element->landCoverTemperature;
       incomingSWSolarRadiation[i] = element->incomingSWSolarRadiation;
       netSWSolarRadiation[i] = element->netSWSolarRadiation;
       backwaterLWRadiation[i] = element->backLWRadiation;
@@ -1511,6 +1526,10 @@ void RHEModel::writeNetCDFOutput()
     m_outNetCDFVariables["width"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), width);
 
     m_outNetCDFVariables["channel_temperature"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), temperature);
+
+    m_outNetCDFVariables["air_temperature"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), airTemperature);
+
+    m_outNetCDFVariables["landcover_temperature"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), landCoverTemperature);
 
     m_outNetCDFVariables["net_main_channel_radiation"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), sumMCRadiation);
 
@@ -1533,6 +1552,8 @@ void RHEModel::writeNetCDFOutput()
     delete[] depth;
     delete[] width;
     delete[] temperature;
+    delete[] airTemperature;
+    delete[] landCoverTemperature;
     delete[] incomingSWSolarRadiation;
     delete[] netSWSolarRadiation;
     delete[] backwaterLWRadiation;
