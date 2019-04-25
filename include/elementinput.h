@@ -44,6 +44,7 @@ class RHECOMPONENT_EXPORT ElementInput : public TimeGeometryMultiInputDouble
       LCTemperature,
       ShadeFactor,
       ShadeFactorMultiplier,
+      Albedo
     };
 
     ElementInput(const QString &id,

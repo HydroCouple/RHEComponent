@@ -105,7 +105,7 @@ double Element::computeRadiation()
 
 void Element::computeNetSWSolarRadiation()
 {
-  netSWSolarRadiation = (1.0  - model->m_albedo) * incomingSWSolarRadiation * max(0.0, (1.0 - shadeFactor * shadeFactorMultiplier));
+  netSWSolarRadiation = (1.0  - albedo) * incomingSWSolarRadiation * max(0.0, (1.0 - shadeFactor * shadeFactorMultiplier));
   sedNetSWSolarRadiation = netSWSolarRadiation * exp(-model->m_extinctionCoefficient * channelDepth);
   netSWSolarRadiation -= sedNetSWSolarRadiation;
 }

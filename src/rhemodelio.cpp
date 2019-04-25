@@ -535,6 +535,12 @@ bool RHEModel::initializeNetCDFOutputFile(list<string> &errors)
     shadeMultVar.putAtt("units", "");
     m_outNetCDFVariables["shade_factor_multiplier"] = shadeMultVar;
 
+    ThreadSafeNcVar albedoVar =  m_outputNetCDF->addVar("albedo", "float",
+                                                           std::vector<std::string>({"time", "elements"}));
+    albedoVar.putAtt("long_name", "Albedo");
+    albedoVar.putAtt("units", "");
+    m_outNetCDFVariables["albedo"] = albedoVar;
+
     m_outputNetCDF->sync();
 
     returnValue = true;
@@ -1498,6 +1504,7 @@ void RHEModel::writeNetCDFOutput()
     float *sumMCRadiation = new float[m_elements.size()];
     float *shadeFactor = new float[m_elements.size()];
     float *shadeFactorMult = new float[m_elements.size()];
+    float *albedo = new float[m_elements.size()];
 
 #ifdef USE_OPENMP
 #pragma omp parallel for
@@ -1519,6 +1526,7 @@ void RHEModel::writeNetCDFOutput()
       sumMCRadiation[i] = element->netMCRadiation;
       shadeFactor[i] = element->shadeFactor;
       shadeFactorMult[i] = element->shadeFactorMultiplier;
+      albedo[i] = element->albedo;
     }
 
     m_outNetCDFVariables["depth"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), depth);
@@ -1549,6 +1557,8 @@ void RHEModel::writeNetCDFOutput()
 
     m_outNetCDFVariables["shade_factor_multiplier"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), shadeFactorMult);
 
+    m_outNetCDFVariables["albedo"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), albedo);
+
     delete[] depth;
     delete[] width;
     delete[] temperature;
@@ -1563,6 +1573,7 @@ void RHEModel::writeNetCDFOutput()
     delete[] sumMCRadiation;
     delete[] shadeFactor;
     delete[] shadeFactorMult;
+    delete[] albedo;
 
     if(m_flushToDisk)
     {

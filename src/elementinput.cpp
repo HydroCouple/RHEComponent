@@ -396,8 +396,23 @@ void ElementInput::applyData()
               }
             }
             break;
+          case Albedo:
+            {
+              for(auto it : geomap)
+                {
+                  double value1 = 0;
+                  double value2 = 0;
+
+                  timeGeometryDataItem->getValue(currentTimeIndex,it.second, &value1);
+                  timeGeometryDataItem->getValue(previousTimeIndex,it.second, &value2);
+
+                  Element *element =  m_component->modelInstance()->getElement(it.first);
+                  element->albedo = value2 + factor *(value1 - value2);
+                }
+            }
+            break;
+          }
         }
-      }
       else
       {
         switch (m_varType)
@@ -479,7 +494,18 @@ void ElementInput::applyData()
               }
             }
             break;
-        }
+          case Albedo:
+            {
+              for(auto it : geomap)
+              {
+                double value = 0;
+                timeGeometryDataItem->getValue(currentTimeIndex,it.second, & value);
+                Element *element =  m_component->modelInstance()->getElement(it.first);
+                element->albedo = value;
+              }
+            }
+            break;
+          }
       }
     }
     else if((geometryDataItem = dynamic_cast<IGeometryComponentDataItem*>(provider)))
@@ -549,6 +575,17 @@ void ElementInput::applyData()
               geometryDataItem->getValue(it.second, & value);
               Element *element =  m_component->modelInstance()->getElement(it.first);
               element->shadeFactorMultiplier = value;
+            }
+          }
+          break;
+        case Albedo:
+          {
+            for(auto it : geomap)
+            {
+              double value = 0;
+              geometryDataItem->getValue(it.second, & value);
+              Element *element =  m_component->modelInstance()->getElement(it.first);
+              element->albedo = value;
             }
           }
           break;
@@ -667,6 +704,21 @@ void ElementInput::applyData()
               }
             }
             break;
+          case Albedo:
+            {
+              for(auto it : geomap)
+              {
+                double value1 = 0;
+                double value2 = 0;
+
+                timeIdBaseDataItem->getValue(currentTimeIndex,it.second, &value1);
+                timeIdBaseDataItem->getValue(previousTimeIndex,it.second, &value2);
+
+                Element *element =  m_component->modelInstance()->getElement(it.first);
+                element->albedo = value2 + factor *(value1 - value2);
+              }
+            }
+            break;
         }
       }
       else
@@ -736,6 +788,17 @@ void ElementInput::applyData()
                 timeIdBaseDataItem->getValue(currentTimeIndex,it.second, & value);
                 Element *element =  m_component->modelInstance()->getElement(it.first);
                 element->shadeFactorMultiplier = value;
+              }
+            }
+            break;
+          case Albedo:
+            {
+              for(auto it : geomap)
+              {
+                double value = 0;
+                timeIdBaseDataItem->getValue(currentTimeIndex,it.second, & value);
+                Element *element =  m_component->modelInstance()->getElement(it.first);
+                element->albedo = value;
               }
             }
             break;

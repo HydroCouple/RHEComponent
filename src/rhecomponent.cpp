@@ -441,6 +441,7 @@ void RHEComponent::createInputs()
   createSkyViewFactorInput();
   createShadeFactorInput();
   createShadeFactorMultiplierInput();
+  createAlbedoInput();
 }
 
 void RHEComponent::createDepthInput()
@@ -661,6 +662,38 @@ void RHEComponent::createShadeFactorMultiplierInput()
   m_shadeFactorMultiplierInput->addTime(dt2);
 
   addInput(m_shadeFactorMultiplierInput);
+}
+
+void RHEComponent::createAlbedoInput()
+{
+  Quantity *unitlessQuantity =  Quantity::unitLessValues("Unitless",QVariant::Double,this);
+
+
+  ElementInput *albedoInput = new ElementInput("AlbedoInput",
+                                               m_timeDimension,
+                                               m_geometryDimension,
+                                               unitlessQuantity,
+                                               ElementInput::Albedo,
+                                               this);
+
+  albedoInput->setCaption("Albedo Input");
+
+  QList<QSharedPointer<HCGeometry>> geometries;
+
+  for(const QSharedPointer<HCGeometry> &lineString : m_elementGeometries)
+  {
+    geometries.append(lineString);
+  }
+
+  albedoInput->addGeometries(geometries);
+
+  SDKTemporal::DateTime *dt1 = new SDKTemporal::DateTime(m_modelInstance->currentDateTime()- 1.0/1000000.0, albedoInput);
+  SDKTemporal::DateTime *dt2 = new SDKTemporal::DateTime(m_modelInstance->currentDateTime(), albedoInput);
+
+  albedoInput->addTime(dt1);
+  albedoInput->addTime(dt2);
+
+  addInput(albedoInput);
 }
 
 void RHEComponent::createOutputs()

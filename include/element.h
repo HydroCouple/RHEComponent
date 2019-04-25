@@ -95,6 +95,11 @@ struct RHECOMPONENT_EXPORT Element
     double channelWidth;
 
     /*!
+     * \brief albedo
+     */
+    double albedo = 0.0;
+
+    /*!
     * \brief upstreamJunction
     */
     ElementJunction *upstreamJunction;

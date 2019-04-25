@@ -376,6 +376,7 @@ bool RHEModel::initializeElements(std::list<string> &errors)
     Element *element = m_elements[i];
     element->index = i;
     element->distanceFromUpStreamJunction = 0;
+    element->albedo = m_albedo;
     element->initialize();
   }
 

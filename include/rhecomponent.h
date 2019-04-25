@@ -184,6 +184,11 @@ class RHECOMPONENT_EXPORT RHEComponent : public AbstractTimeModelComponent,
     void createShadeFactorMultiplierInput();
 
     /*!
+     * \brief createAlbedoInput dynamic albedo input
+     */
+    void createAlbedoInput();
+
+    /*!
      * \brief createOutputs
      */
     void createOutputs() override;
