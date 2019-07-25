@@ -46,3 +46,4 @@ CMakeLists.txt.user*
 *.lib
 *.ilk
 *.nc
+.DS_Store

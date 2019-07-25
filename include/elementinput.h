@@ -53,6 +53,9 @@ class RHECOMPONENT_EXPORT ElementInput : public TimeGeometryMultiInputDouble
                  VariableType varType,
                  RHEComponent *modelComponent);
 
+    virtual ~ElementInput() override
+    {}
+
     /*!
      * \brief setProvider
      * \param provider

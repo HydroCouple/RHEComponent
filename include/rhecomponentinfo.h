@@ -34,7 +34,7 @@ class RHECOMPONENT_EXPORT RHEComponentInfo : public AbstractModelComponentInfo
 
     RHEComponentInfo(QObject *parent = nullptr);
 
-    virtual ~RHEComponentInfo();
+    virtual ~RHEComponentInfo() override;
 
     HydroCouple::IModelComponent* createComponentInstance() override;
 };

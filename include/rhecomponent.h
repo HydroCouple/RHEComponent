@@ -54,7 +54,7 @@ class RHECOMPONENT_EXPORT RHEComponent : public AbstractTimeModelComponent,
     /*!
      * \brief ~RHEComponent destructor
      */
-    virtual ~RHEComponent();
+    virtual ~RHEComponent() override;
 
     /*!
      * \brief validate validates this component model instance

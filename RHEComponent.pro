@@ -1,6 +1,6 @@
 #Author Caleb Amoa Buahin
 #Email caleb.buahin@gmail.com
-#Date 2018
+#Date 2016-2019
 #License GNU Lesser General Public License (see <http: //www.gnu.org/licenses/> for details).
 #The RHEComponent is a component-based radiative heat exchange stream transport model
 

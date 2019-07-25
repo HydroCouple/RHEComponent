@@ -29,12 +29,15 @@
 #include "hydrocoupletemporal.h"
 
 #include <QDebug>
+
+#ifdef USE_OPENMP
 #include <omp.h>
+#endif
 
 using namespace HydroCouple;
 using namespace HydroCouple::Spatial;
-using namespace HydroCouple::SpatioTemporal;
 using namespace HydroCouple::Temporal;
+using namespace HydroCouple::SpatioTemporal;
 
 ElementInput::ElementInput(const QString &id,
                            Dimension *timeDimension,
@@ -58,6 +61,7 @@ bool ElementInput::addProvider(HydroCouple::IOutput *provider)
     ITimeGeometryComponentDataItem *timeGeometryDataItem = nullptr;
     IGeometryComponentDataItem *geometryDataItem = nullptr;
     ITimeIdBasedComponentDataItem *timeIdBaseDataItem = nullptr;
+    IIdBasedComponentDataItem *idBasedDataItem = nullptr;
 
     if((timeGeometryDataItem = dynamic_cast<ITimeGeometryComponentDataItem*>(provider)))
     {
@@ -190,6 +194,37 @@ bool ElementInput::addProvider(HydroCouple::IOutput *provider)
 
       return true;
     }
+    else if((idBasedDataItem = dynamic_cast<IIdBasedComponentDataItem*>(provider)))
+    {
+      QStringList identifiers = idBasedDataItem->identifiers();
+
+      if(identifiers.size())
+      {
+        std::vector<bool> mapped(identifiers.size(), false);
+
+        for(int i = 0; i < geometryCount() ; i++)
+        {
+          Element *element = m_component->modelInstance()->getElement(i);
+
+          for(int j = 0; j < identifiers.size(); j++)
+          {
+            if(!mapped[j])
+            {
+              QString providerId = identifiers[j];
+
+              if(element->id == providerId.toStdString())
+              {
+                m_geometryMapping[provider][i] = j;
+                mapped[j] = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      return true;
+    }
   }
 
   return false;
@@ -209,32 +244,42 @@ bool ElementInput::removeProvider(HydroCouple::IOutput *provider)
 
 bool ElementInput::canConsume(HydroCouple::IOutput *provider, QString &message) const
 {
-  ITimeGeometryComponentDataItem *timeGeometryDataItem = nullptr;
-  IGeometryComponentDataItem *geometryDataItem = nullptr;
-  ITimeIdBasedComponentDataItem *timeIdBaseDataItem = nullptr;
+  ITimeGeometryComponentDataItem *timeGeometryDataItem = dynamic_cast<ITimeGeometryComponentDataItem*>(provider);
+  IGeometryComponentDataItem *geometryDataItem = dynamic_cast<IGeometryComponentDataItem*>(provider);
+  ITimeIdBasedComponentDataItem *timeIdBaseDataItem = dynamic_cast<ITimeIdBasedComponentDataItem*>(provider);
+  IIdBasedComponentDataItem *idBasedDataItem = dynamic_cast<IIdBasedComponentDataItem*>(provider);
 
-  if((timeGeometryDataItem = dynamic_cast<ITimeGeometryComponentDataItem*>(provider)) &&
+  if((timeGeometryDataItem != nullptr) &&
      (timeGeometryDataItem->geometryType() == IGeometry::LineString ||
       timeGeometryDataItem->geometryType() == IGeometry::LineStringZ ||
       timeGeometryDataItem->geometryType() == IGeometry::LineStringZM) &&
-     (provider->valueDefinition()->type() == QVariant::Double ||
-      provider->valueDefinition()->type() == QVariant::Int))
+     (timeGeometryDataItem->valueDefinition()->type() == QVariant::Double ||
+      timeGeometryDataItem->valueDefinition()->type() == QVariant::Int))
   {
     return true;
   }
-  else if((geometryDataItem = dynamic_cast<IGeometryComponentDataItem*>(provider)) &&
+  else if((geometryDataItem != nullptr) &&
           (geometryDataItem->geometryType() == IGeometry::LineString ||
            geometryDataItem->geometryType() == IGeometry::LineStringZ ||
            geometryDataItem->geometryType() == IGeometry::LineStringZM) &&
-          (provider->valueDefinition()->type() == QVariant::Double ||
-           provider->valueDefinition()->type() == QVariant::Int))
+          (geometryDataItem->valueDefinition()->type() == QVariant::Double ||
+           geometryDataItem->valueDefinition()->type() == QVariant::Int))
   {
     return true;
   }
-  else if((timeIdBaseDataItem = dynamic_cast<ITimeIdBasedComponentDataItem*>(provider)))
+  else if((timeIdBaseDataItem != nullptr) &&
+          (timeIdBaseDataItem->valueDefinition()->type() == QVariant::Double ||
+           timeIdBaseDataItem->valueDefinition()->type() == QVariant::Int))
   {
     return true;
   }
+  else if((idBasedDataItem != nullptr) &&
+          (idBasedDataItem->valueDefinition()->type() == QVariant::Double ||
+           idBasedDataItem->valueDefinition()->type() == QVariant::Int))
+  {
+    return true;
+  }
+
 
   message = "Provider must be a LineString";
 
@@ -266,6 +311,7 @@ void ElementInput::applyData()
     ITimeGeometryComponentDataItem *timeGeometryDataItem = nullptr;
     IGeometryComponentDataItem *geometryDataItem = nullptr;
     ITimeIdBasedComponentDataItem *timeIdBaseDataItem = nullptr;
+    IIdBasedComponentDataItem *idBasedDataItem = nullptr;
 
     if((timeGeometryDataItem = dynamic_cast<ITimeGeometryComponentDataItem*>(provider)))
     {
@@ -740,6 +786,78 @@ void ElementInput::applyData()
             }
             break;
         }
+      }
+    }
+    else if((idBasedDataItem = dynamic_cast<IIdBasedComponentDataItem*>(provider)))
+    {
+      switch (m_varType)
+      {
+        case Depth:
+          {
+            for(auto it : geomap)
+            {
+              double value = 0;
+              geometryDataItem->getValue(it.second, & value);
+              Element *element =  m_component->modelInstance()->getElement(it.first);
+              element->channelDepth = value;
+            }
+          }
+          break;
+        case TopWidth:
+          {
+            for(auto it : geomap)
+            {
+              double value = 0;
+              geometryDataItem->getValue(it.second, & value);
+              Element *element =  m_component->modelInstance()->getElement(it.first);
+              element->channelWidth = value;
+            }
+          }
+          break;
+        case Temperature:
+          {
+            for(auto it : geomap)
+            {
+              double value = 0;
+              geometryDataItem->getValue(it.second, & value);
+              Element *element =  m_component->modelInstance()->getElement(it.first);
+              element->channelTemperature = value;
+            }
+          }
+          break;
+        case SkyviewFactor:
+          {
+            for(auto it : geomap)
+            {
+              double value = 0;
+              geometryDataItem->getValue(it.second, & value);
+              Element *element =  m_component->modelInstance()->getElement(it.first);
+              element->skyViewFactor = value;
+            }
+          }
+          break;
+        case ShadeFactor:
+          {
+            for(auto it : geomap)
+            {
+              double value = 0;
+              geometryDataItem->getValue(it.second, & value);
+              Element *element =  m_component->modelInstance()->getElement(it.first);
+              element->shadeFactor = value;
+            }
+          }
+          break;
+        case ShadeFactorMultiplier:
+          {
+            for(auto it : geomap)
+            {
+              double value = 0;
+              geometryDataItem->getValue(it.second, & value);
+              Element *element =  m_component->modelInstance()->getElement(it.first);
+              element->shadeFactorMultiplier = value;
+            }
+          }
+          break;
       }
     }
 

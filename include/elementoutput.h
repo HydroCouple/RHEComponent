@@ -51,7 +51,7 @@ class RHECOMPONENT_EXPORT ElementOutput: public TimeGeometryOutputDouble
                   RHEComponent *modelComponent);
 
 
-    virtual ~ElementOutput();
+    virtual ~ElementOutput() override;
 
     void updateValues(HydroCouple::IInput *querySpecifier) override;
 
