@@ -52,6 +52,7 @@ struct RHECOMPONENT_EXPORT SolverUserData
 };
 
 typedef void (*RetrieveCouplingData)(RHEModel *model, double dateTime);
+typedef void (*WriteVariableToNetCDF)(size_t currentTime, ThreadSafeNcVar &variable, const std::vector<Element*>& elements);
 
 class RHECOMPONENT_EXPORT RHEModel : public QObject
 {
@@ -651,6 +652,9 @@ class RHECOMPONENT_EXPORT RHEModel : public QObject
 #ifdef USE_NETCDF
     ThreadSafeNcFile *m_outputNetCDF = nullptr; //NetCDF output file object
     std::unordered_map<std::string, ThreadSafeNcVar> m_outNetCDFVariables;
+    std::unordered_map<std::string, bool> m_outNetCDFVariablesOnOff;
+    std::unordered_map<std::string, WriteVariableToNetCDF> m_outNetCDFVariablesIOFunctions;
+    std::vector<std::string> m_optionalOutputVariables;
 #endif
 
     QTextStream m_outputCSVStream; //Output CSV filestream

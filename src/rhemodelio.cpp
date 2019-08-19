@@ -153,6 +153,7 @@ bool RHEModel::initializeInputFiles(list<string> &errors)
 
     if (file.open(QIODevice::ReadOnly))
     {
+      m_outNetCDFVariablesOnOff.clear();
       m_timeSeries.clear();
 
       m_delimiters = QRegExp("(\\,|\\t|\\;|\\s+)");
@@ -443,97 +444,288 @@ bool RHEModel::initializeNetCDFOutputFile(list<string> &errors)
 
     delete[] elementIds;
 
+    auto varOnOff = [this](const std::string& name) -> bool
+    {
+      return m_outNetCDFVariablesOnOff.find(name) != m_outNetCDFVariablesOnOff.end() ? m_outNetCDFVariablesOnOff[name] : true;
+    };
+
     //hydraulics variables
-    ThreadSafeNcVar depthVar =  m_outputNetCDF->addVar("depth", "float",
-                                                       std::vector<std::string>({"time", "elements"}));
-    depthVar.putAtt("long_name", "Flow Depth");
-    depthVar.putAtt("units", "m");
-    m_outNetCDFVariables["depth"] = depthVar;
+    if((m_outNetCDFVariablesOnOff["depth"] = varOnOff("depth")))
+    {
+      ThreadSafeNcVar depthVar =  m_outputNetCDF->addVar("depth", "float",
+                                                         std::vector<std::string>({"time", "elements"}));
+      depthVar.putAtt("long_name", "Flow Depth");
+      depthVar.putAtt("units", "m");
+      m_outNetCDFVariables["depth"] = depthVar;
 
-    ThreadSafeNcVar widthVar =  m_outputNetCDF->addVar("width", "float",
-                                                       std::vector<std::string>({"time", "elements"}));
-    widthVar.putAtt("long_name", "Flow Top Width");
-    widthVar.putAtt("units", "m");
-    m_outNetCDFVariables["width"] = widthVar;
+      m_outNetCDFVariablesIOFunctions["depth"] = [](size_t currentTime, ThreadSafeNcVar &variable, const std::vector<Element*>& elements)
+      {
+        float *depth = new float[elements.size()];
+        for (size_t i = 0; i < elements.size(); i++)
+        {
+          depth[i] = static_cast<float>(elements[i]->channelDepth);
+        }
+        variable.putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, elements.size()}), depth);
+        delete[] depth;
+      };
+    }
 
-    ThreadSafeNcVar temperatureVar =  m_outputNetCDF->addVar("channel_temperature", "float",
-                                                             std::vector<std::string>({"time", "elements"}));
-    temperatureVar.putAtt("long_name", "Channel Temperature");
-    temperatureVar.putAtt("units", "°C");
-    m_outNetCDFVariables["channel_temperature"] = temperatureVar;
+    if((m_outNetCDFVariablesOnOff["width"] = varOnOff("width")))
+    {
+      ThreadSafeNcVar widthVar =  m_outputNetCDF->addVar("width", "float",
+                                                         std::vector<std::string>({"time", "elements"}));
+      widthVar.putAtt("long_name", "Flow Top Width");
+      widthVar.putAtt("units", "m");
+      m_outNetCDFVariables["width"] = widthVar;
+      m_outNetCDFVariablesIOFunctions["width"] = [](size_t currentTime, ThreadSafeNcVar &variable, const std::vector<Element*>& elements)
+      {
+        float *width = new float[elements.size()];
+        for (size_t i = 0; i < elements.size(); i++)
+        {
+          width[i] = static_cast<float>(elements[i]->channelWidth);
+        }
+        variable.putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, elements.size()}), width);
+        delete[] width;
+      };
+    }
 
-    ThreadSafeNcVar airTemperatureVar =  m_outputNetCDF->addVar("air_temperature", "float",
-                                                             std::vector<std::string>({"time", "elements"}));
-    airTemperatureVar.putAtt("long_name", "Air Temperature");
-    airTemperatureVar.putAtt("units", "°C");
-    m_outNetCDFVariables["air_temperature"] = airTemperatureVar;
+    if((m_outNetCDFVariablesOnOff["channel_temperature"] = varOnOff("channel_temperature")))
+    {
+      ThreadSafeNcVar temperatureVar =  m_outputNetCDF->addVar("channel_temperature", "float",
+                                                               std::vector<std::string>({"time", "elements"}));
+      temperatureVar.putAtt("long_name", "Channel Temperature");
+      temperatureVar.putAtt("units", "°C");
+      m_outNetCDFVariables["channel_temperature"] = temperatureVar;
+      m_outNetCDFVariablesIOFunctions["channel_temperature"] = [](size_t currentTime, ThreadSafeNcVar &variable, const std::vector<Element*>& elements)
+      {
+        float *channel_temperature = new float[elements.size()];
+        for (size_t i = 0; i < elements.size(); i++)
+        {
+          channel_temperature[i] = static_cast<float>(elements[i]->channelTemperature);
+        }
+        variable.putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, elements.size()}), channel_temperature);
+        delete[] channel_temperature;
+      };
+    }
 
-    ThreadSafeNcVar landCoverTemperatureVar =  m_outputNetCDF->addVar("landcover_temperature", "float",
-                                                             std::vector<std::string>({"time", "elements"}));
-    landCoverTemperatureVar.putAtt("long_name", "Landcover Temperature");
-    landCoverTemperatureVar.putAtt("units", "°C");
-    m_outNetCDFVariables["landcover_temperature"] = landCoverTemperatureVar;
+    if((m_outNetCDFVariablesOnOff["air_temperature"] = varOnOff("air_temperature")))
+    {
+      ThreadSafeNcVar airTemperatureVar =  m_outputNetCDF->addVar("air_temperature", "float",
+                                                                  std::vector<std::string>({"time", "elements"}));
+      airTemperatureVar.putAtt("long_name", "Air Temperature");
+      airTemperatureVar.putAtt("units", "°C");
+      m_outNetCDFVariables["air_temperature"] = airTemperatureVar;
+      m_outNetCDFVariablesIOFunctions["air_temperature"] = [](size_t currentTime, ThreadSafeNcVar &variable, const std::vector<Element*>& elements)
+      {
+        float *air_temperature = new float[elements.size()];
+        for (size_t i = 0; i < elements.size(); i++)
+        {
+          air_temperature[i] = static_cast<float>(elements[i]->airTemperature);
+        }
+        variable.putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, elements.size()}), air_temperature);
+        delete[] air_temperature;
+      };
+    }
 
-    ThreadSafeNcVar incomingSWSolarRadiationVar =  m_outputNetCDF->addVar("incoming_shortwave_solar_radiation", "float",
+
+    if((m_outNetCDFVariablesOnOff["landcover_temperature"] = varOnOff("landcover_temperature")))
+    {
+      ThreadSafeNcVar landCoverTemperatureVar =  m_outputNetCDF->addVar("landcover_temperature", "float",
+                                                                        std::vector<std::string>({"time", "elements"}));
+      landCoverTemperatureVar.putAtt("long_name", "Landcover Temperature");
+      landCoverTemperatureVar.putAtt("units", "°C");
+      m_outNetCDFVariables["landcover_temperature"] = landCoverTemperatureVar;
+      m_outNetCDFVariablesIOFunctions["landcover_temperature"] = [](size_t currentTime, ThreadSafeNcVar &variable, const std::vector<Element*>& elements)
+      {
+        float *landcover_temperature = new float[elements.size()];
+        for (size_t i = 0; i < elements.size(); i++)
+        {
+          landcover_temperature[i] = static_cast<float>(elements[i]->landCoverTemperature);
+        }
+        variable.putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, elements.size()}), landcover_temperature);
+        delete[] landcover_temperature;
+      };
+    }
+
+    if((m_outNetCDFVariablesOnOff["incoming_shortwave_solar_radiation"] = varOnOff("incoming_shortwave_solar_radiation")))
+    {
+      ThreadSafeNcVar incomingSWSolarRadiationVar =  m_outputNetCDF->addVar("incoming_shortwave_solar_radiation", "float",
+                                                                            std::vector<std::string>({"time", "elements"}));
+      incomingSWSolarRadiationVar.putAtt("long_name", "Incoming Shortwave Solar Radiation");
+      incomingSWSolarRadiationVar.putAtt("units", "W/m^2");
+      m_outNetCDFVariables["incoming_shortwave_solar_radiation"] = incomingSWSolarRadiationVar;
+      m_outNetCDFVariablesIOFunctions["air_temperature"] = [](size_t currentTime, ThreadSafeNcVar &variable, const std::vector<Element*>& elements)
+      {
+        float *incoming_shortwave_solar_radiation = new float[elements.size()];
+        for (size_t i = 0; i < elements.size(); i++)
+        {
+          incoming_shortwave_solar_radiation[i] = static_cast<float>(elements[i]->incomingSWSolarRadiation);
+        }
+        variable.putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, elements.size()}), incoming_shortwave_solar_radiation);
+        delete[] incoming_shortwave_solar_radiation;
+      };
+    }
+
+    if((m_outNetCDFVariablesOnOff["net_shortwave_solar_radiation"] = varOnOff("net_shortwave_solar_radiation")))
+    {
+      ThreadSafeNcVar netSWSolarRadiationVar =  m_outputNetCDF->addVar("net_shortwave_solar_radiation", "float",
+                                                                       std::vector<std::string>({"time", "elements"}));
+      netSWSolarRadiationVar.putAtt("long_name", "Net Shortwave Solar Radiation");
+      netSWSolarRadiationVar.putAtt("units", "W/m^2");
+      m_outNetCDFVariables["net_shortwave_solar_radiation"] = netSWSolarRadiationVar;
+      m_outNetCDFVariablesIOFunctions["net_shortwave_solar_radiation"] = [](size_t currentTime, ThreadSafeNcVar &variable, const std::vector<Element*>& elements)
+      {
+        float *net_shortwave_solar_radiation = new float[elements.size()];
+        for (size_t i = 0; i < elements.size(); i++)
+        {
+          net_shortwave_solar_radiation[i] = static_cast<float>(elements[i]->netSWSolarRadiation);
+        }
+        variable.putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, elements.size()}), net_shortwave_solar_radiation);
+        delete[] net_shortwave_solar_radiation;
+      };
+    }
+
+    if((m_outNetCDFVariablesOnOff["back_longwave_radiation"] = varOnOff("back_longwave_radiation")))
+    {
+      ThreadSafeNcVar backLWRadiationVar =  m_outputNetCDF->addVar("back_longwave_radiation", "float",
+                                                                   std::vector<std::string>({"time", "elements"}));
+      backLWRadiationVar.putAtt("long_name", "Back Longwave Radiation");
+      backLWRadiationVar.putAtt("units", "W/m^2");
+      m_outNetCDFVariables["back_longwave_radiation"] = backLWRadiationVar;
+      m_outNetCDFVariablesIOFunctions["air_temperature"] = [](size_t currentTime, ThreadSafeNcVar &variable, const std::vector<Element*>& elements)
+      {
+        float *back_longwave_radiation = new float[elements.size()];
+        for (size_t i = 0; i < elements.size(); i++)
+        {
+          back_longwave_radiation[i] = static_cast<float>(elements[i]->backLWRadiation);
+        }
+        variable.putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, elements.size()}), back_longwave_radiation);
+        delete[] back_longwave_radiation;
+      };
+    }
+
+    if((m_outNetCDFVariablesOnOff["sediment_net_shortwave_solar_radiation"] = varOnOff("sediment_net_shortwave_solar_radiation")))
+    {
+      ThreadSafeNcVar sedNetSWSolarRadiationVar =  m_outputNetCDF->addVar("sediment_net_shortwave_solar_radiation", "float",
                                                                           std::vector<std::string>({"time", "elements"}));
-    incomingSWSolarRadiationVar.putAtt("long_name", "Incoming Shortwave Solar Radiation");
-    incomingSWSolarRadiationVar.putAtt("units", "W/m^2");
-    m_outNetCDFVariables["incoming_shortwave_solar_radiation"] = incomingSWSolarRadiationVar;
+      sedNetSWSolarRadiationVar.putAtt("long_name", "Net Shortwave Solar Radiation Reaching Sediment");
+      sedNetSWSolarRadiationVar.putAtt("units", "W/m^2");
+      m_outNetCDFVariables["sediment_net_shortwave_solar_radiation"] = sedNetSWSolarRadiationVar;
+      m_outNetCDFVariablesIOFunctions["air_temperature"] = [](size_t currentTime, ThreadSafeNcVar &variable, const std::vector<Element*>& elements)
+      {
+        float *sediment_net_shortwave_solar_radiation = new float[elements.size()];
+        for (size_t i = 0; i < elements.size(); i++)
+        {
+          sediment_net_shortwave_solar_radiation[i] = static_cast<float>(elements[i]->sedNetSWSolarRadiation);
+        }
+        variable.putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, elements.size()}), sediment_net_shortwave_solar_radiation);
+        delete[] sediment_net_shortwave_solar_radiation;
+      };
+    }
 
+    if((m_outNetCDFVariablesOnOff["atmospheric_longwave_radiation"] = varOnOff("atmospheric_longwave_radiation")))
+    {
+      ThreadSafeNcVar atmosphericLWRadiationVar =  m_outputNetCDF->addVar("atmospheric_longwave_radiation", "float",
+                                                                          std::vector<std::string>({"time", "elements"}));
+      atmosphericLWRadiationVar.putAtt("long_name", "Atmospheric Longwave Radiation");
+      atmosphericLWRadiationVar.putAtt("units", "W/m^2");
+      m_outNetCDFVariables["atmospheric_longwave_radiation"] = atmosphericLWRadiationVar;
+      m_outNetCDFVariablesIOFunctions["air_temperature"] = [](size_t currentTime, ThreadSafeNcVar &variable, const std::vector<Element*>& elements)
+      {
+        float *atmospheric_longwave_radiation = new float[elements.size()];
+        for (size_t i = 0; i < elements.size(); i++)
+        {
+          atmospheric_longwave_radiation[i] = static_cast<float>(elements[i]->atmosphericLWRadiation);
+        }
+        variable.putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, elements.size()}), atmospheric_longwave_radiation);
+        delete[] atmospheric_longwave_radiation;
+      };
+    }
 
-    ThreadSafeNcVar netSWSolarRadiationVar =  m_outputNetCDF->addVar("net_shortwave_solar_radiation", "float",
-                                                                     std::vector<std::string>({"time", "elements"}));
-    netSWSolarRadiationVar.putAtt("long_name", "Net Shortwave Solar Radiation");
-    netSWSolarRadiationVar.putAtt("units", "W/m^2");
-    m_outNetCDFVariables["net_shortwave_solar_radiation"] = netSWSolarRadiationVar;
-
-
-    ThreadSafeNcVar backLWRadiationVar =  m_outputNetCDF->addVar("back_longwave_radiation", "float",
-                                                                 std::vector<std::string>({"time", "elements"}));
-    backLWRadiationVar.putAtt("long_name", "Back Longwave Radiation");
-    backLWRadiationVar.putAtt("units", "W/m^2");
-    m_outNetCDFVariables["back_longwave_radiation"] = backLWRadiationVar;
-
-    ThreadSafeNcVar sedNetSWSolarRadiationVar =  m_outputNetCDF->addVar("sediment_net_shortwave_solar_radiation", "float",
+    if((m_outNetCDFVariablesOnOff["landcover_longwave_radiation"] = varOnOff("landcover_longwave_radiation")))
+    {
+      ThreadSafeNcVar landCoverLWRadiationVar =  m_outputNetCDF->addVar("landcover_longwave_radiation", "float",
                                                                         std::vector<std::string>({"time", "elements"}));
-    sedNetSWSolarRadiationVar.putAtt("long_name", "Net Shortwave Solar Radiation Reaching Sediment");
-    sedNetSWSolarRadiationVar.putAtt("units", "W/m^2");
-    m_outNetCDFVariables["sediment_net_shortwave_solar_radiation"] = sedNetSWSolarRadiationVar;
+      landCoverLWRadiationVar.putAtt("long_name", "Landcover Longwave Radiation");
+      landCoverLWRadiationVar.putAtt("units", "W/m^2");
+      m_outNetCDFVariables["landcover_longwave_radiation"] = landCoverLWRadiationVar;
+      m_outNetCDFVariablesIOFunctions["landcover_longwave_radiation"] = [](size_t currentTime, ThreadSafeNcVar &variable, const std::vector<Element*>& elements)
+      {
+        float *landcover_longwave_radiation = new float[elements.size()];
+        for (size_t i = 0; i < elements.size(); i++)
+        {
+          landcover_longwave_radiation[i] = static_cast<float>(elements[i]->landCoverLWRadiation);
+        }
+        variable.putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, elements.size()}), landcover_longwave_radiation);
+        delete[] landcover_longwave_radiation;
+      };
+    }
 
+    if((m_outNetCDFVariablesOnOff["net_main_channel_radiation"] = varOnOff("net_main_channel_radiation")))
+    {
+      ThreadSafeNcVar sumMCRadiationVar =  m_outputNetCDF->addVar("net_main_channel_radiation", "float",
+                                                                  std::vector<std::string>({"time", "elements"}));
+      sumMCRadiationVar.putAtt("long_name", "Net Radiation Reaching Main Channel");
+      sumMCRadiationVar.putAtt("units", "W/m^2");
+      m_outNetCDFVariables["net_main_channel_radiation"] = sumMCRadiationVar;
+      m_outNetCDFVariablesIOFunctions["net_main_channel_radiation"] = [](size_t currentTime, ThreadSafeNcVar &variable, const std::vector<Element*>& elements)
+      {
+        float *net_main_channel_radiation = new float[elements.size()];
+        for (size_t i = 0; i < elements.size(); i++)
+        {
+          net_main_channel_radiation[i] = static_cast<float>(elements[i]->netMCRadiation);
+        }
+        variable.putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, elements.size()}), net_main_channel_radiation);
+        delete[] net_main_channel_radiation;
+      };
+    }
 
-    ThreadSafeNcVar atmosphericLWRadiationVar =  m_outputNetCDF->addVar("atmospheric_longwave_radiation", "float",
-                                                                        std::vector<std::string>({"time", "elements"}));
-    atmosphericLWRadiationVar.putAtt("long_name", "Atmospheric Longwave Radiation");
-    atmosphericLWRadiationVar.putAtt("units", "W/m^2");
-    m_outNetCDFVariables["atmospheric_longwave_radiation"] = atmosphericLWRadiationVar;
+    if((m_outNetCDFVariablesOnOff["shade_factor"] = varOnOff("shade_factor")))
+    {
+      ThreadSafeNcVar shadeVar =  m_outputNetCDF->addVar("shade_factor", "float",
+                                                         std::vector<std::string>({"time", "elements"}));
+      shadeVar.putAtt("long_name", "Shade Factor");
+      shadeVar.putAtt("units", "");
+      m_outNetCDFVariables["shade_factor"] = shadeVar;
+      m_outNetCDFVariablesIOFunctions["shade_factor"] = [](size_t currentTime, ThreadSafeNcVar &variable, const std::vector<Element*>& elements)
+      {
+        float *shade_factor = new float[elements.size()];
+        for (size_t i = 0; i < elements.size(); i++)
+        {
+          shade_factor[i] = static_cast<float>(elements[i]->shadeFactor);
+        }
+        variable.putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, elements.size()}), shade_factor);
+        delete[] shade_factor;
+      };
+    }
 
+    if((m_outNetCDFVariablesOnOff["shade_factor_multiplier"] = varOnOff("shade_factor_multiplier")))
+    {
+      ThreadSafeNcVar shadeMultVar =  m_outputNetCDF->addVar("shade_factor_multiplier", "float",
+                                                             std::vector<std::string>({"time", "elements"}));
+      shadeMultVar.putAtt("long_name", "Shade Factor Multiplier");
+      shadeMultVar.putAtt("units", "");
+      m_outNetCDFVariables["shade_factor_multiplier"] = shadeMultVar;
+      m_outNetCDFVariablesIOFunctions["shade_factor_multiplier"] = [](size_t currentTime, ThreadSafeNcVar &variable, const std::vector<Element*>& elements)
+      {
+        float *shade_factor_multiplier = new float[elements.size()];
+        for (size_t i = 0; i < elements.size(); i++)
+        {
+          shade_factor_multiplier[i] = static_cast<float>(elements[i]->shadeFactorMultiplier);
+        }
+        variable.putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, elements.size()}), shade_factor_multiplier);
+        delete[] shade_factor_multiplier;
+      };
+    }
 
-    ThreadSafeNcVar landCoverLWRadiationVar =  m_outputNetCDF->addVar("landcover_longwave_radiation", "float",
-                                                                      std::vector<std::string>({"time", "elements"}));
-    landCoverLWRadiationVar.putAtt("long_name", "Landcover Longwave Radiation");
-    landCoverLWRadiationVar.putAtt("units", "W/m^2");
-    m_outNetCDFVariables["landcover_longwave_radiation"] = landCoverLWRadiationVar;
+    m_optionalOutputVariables.clear();
+    m_optionalOutputVariables.reserve(m_outNetCDFVariablesOnOff.size());
 
-
-    ThreadSafeNcVar sumMCRadiationVar =  m_outputNetCDF->addVar("net_main_channel_radiation", "float",
-                                                                std::vector<std::string>({"time", "elements"}));
-    sumMCRadiationVar.putAtt("long_name", "Net Radiation Reaching Main Channel");
-    sumMCRadiationVar.putAtt("units", "W/m^2");
-    m_outNetCDFVariables["net_main_channel_radiation"] = sumMCRadiationVar;
-
-
-    ThreadSafeNcVar shadeVar =  m_outputNetCDF->addVar("shade_factor", "float",
-                                                       std::vector<std::string>({"time", "elements"}));
-    shadeVar.putAtt("long_name", "Shade Factor");
-    shadeVar.putAtt("units", "");
-    m_outNetCDFVariables["shade_factor"] = shadeVar;
-
-
-    ThreadSafeNcVar shadeMultVar =  m_outputNetCDF->addVar("shade_factor_multiplier", "float",
-                                                           std::vector<std::string>({"time", "elements"}));
-    shadeMultVar.putAtt("long_name", "Shade Factor Multiplier");
-    shadeMultVar.putAtt("units", "");
-    m_outNetCDFVariables["shade_factor_multiplier"] = shadeMultVar;
+    for (const auto& pair : m_outNetCDFVariablesOnOff)
+    {
+      if(pair.second)
+        m_optionalOutputVariables.push_back(pair.first);
+    }
 
     m_outputNetCDF->sync();
 
@@ -777,7 +969,7 @@ bool RHEModel::readInputFileOptionTag(const QString &line, QString &errorMessage
 
           if (options.size() == 2)
           {
-            m_verbose = QString::compare(options[1], "No", Qt::CaseInsensitive);
+            m_verbose = QString::compare(options[1], "No", Qt::CaseInsensitive) && QString::compare(options[1], "False", Qt::CaseInsensitive);
           }
           else
           {
@@ -1484,85 +1676,97 @@ void RHEModel::writeNetCDFOutput()
     size_t currentTime = m_outNetCDFVariables["time"].getDim(0).getSize();
     m_outNetCDFVariables["time"].putVar(std::vector<size_t>({currentTime}), m_currentDateTime);
 
-    float *depth = new float[m_elements.size()];
-    float *width = new float[m_elements.size()];
-    float *temperature = new float[m_elements.size()];
-    float *airTemperature = new float[m_elements.size()];
-    float *landCoverTemperature = new float[m_elements.size()];
-    float *incomingSWSolarRadiation = new float[m_elements.size()];
-    float *netSWSolarRadiation = new float[m_elements.size()];
-    float *backwaterLWRadiation = new float[m_elements.size()];
-    float *sedNetSWSolarRadiation = new float[m_elements.size()];
-    float *atmosphericLWRadiation = new float[m_elements.size()];
-    float *landCoverLWRadiation = new float[m_elements.size()];
-    float *sumMCRadiation = new float[m_elements.size()];
-    float *shadeFactor = new float[m_elements.size()];
-    float *shadeFactorMult = new float[m_elements.size()];
+    int nVars = static_cast<int>(m_optionalOutputVariables.size());
 
 #ifdef USE_OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < (int)m_elements.size(); i++)
+    for (int i = 0; i < nVars; i++)
     {
-      Element *element = m_elements[i];
-      depth[i] = element->channelDepth;
-      width[i] = element->channelWidth;
-      temperature[i] = element->channelTemperature;
-      airTemperature[i] = element->airTemperature;
-      landCoverTemperature[i] = element->landCoverTemperature;
-      incomingSWSolarRadiation[i] = element->incomingSWSolarRadiation;
-      netSWSolarRadiation[i] = element->netSWSolarRadiation;
-      backwaterLWRadiation[i] = element->backLWRadiation;
-      sedNetSWSolarRadiation[i] = element->sedNetSWSolarRadiation;
-      atmosphericLWRadiation[i] = element->atmosphericLWRadiation;
-      landCoverLWRadiation[i] = element->landCoverLWRadiation;
-      sumMCRadiation[i] = element->netMCRadiation;
-      shadeFactor[i] = element->shadeFactor;
-      shadeFactorMult[i] = element->shadeFactorMultiplier;
+      std::string varName = m_optionalOutputVariables[static_cast<size_t>(i)];
+      (m_outNetCDFVariablesIOFunctions[varName])(currentTime, m_outNetCDFVariables[varName], m_elements);
     }
 
-    m_outNetCDFVariables["depth"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), depth);
 
-    m_outNetCDFVariables["width"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), width);
+    //    float *depth = new float[m_elements.size()];
+    //    float *width = new float[m_elements.size()];
+    //    float *temperature = new float[m_elements.size()];
+    //    float *airTemperature = new float[m_elements.size()];
+    //    float *landCoverTemperature = new float[m_elements.size()];
+    //    float *incomingSWSolarRadiation = new float[m_elements.size()];
+    //    float *netSWSolarRadiation = new float[m_elements.size()];
+    //    float *backwaterLWRadiation = new float[m_elements.size()];
+    //    float *sedNetSWSolarRadiation = new float[m_elements.size()];
+    //    float *atmosphericLWRadiation = new float[m_elements.size()];
+    //    float *landCoverLWRadiation = new float[m_elements.size()];
+    //    float *sumMCRadiation = new float[m_elements.size()];
+    //    float *shadeFactor = new float[m_elements.size()];
+    //    float *shadeFactorMult = new float[m_elements.size()];
 
-    m_outNetCDFVariables["channel_temperature"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), temperature);
+    //#ifdef USE_OPENMP
+    //#pragma omp parallel for
+    //#endif
+    //    for (int i = 0; i < (int)m_elements.size(); i++)
+    //    {
+    //      Element *element = m_elements[i];
+    //      depth[i] = element->channelDepth;
+    //      width[i] = element->channelWidth;
+    //      temperature[i] = element->channelTemperature;
+    //      airTemperature[i] = element->airTemperature;
+    //      landCoverTemperature[i] = element->landCoverTemperature;
+    //      incomingSWSolarRadiation[i] = element->incomingSWSolarRadiation;
+    //      netSWSolarRadiation[i] = element->netSWSolarRadiation;
+    //      backwaterLWRadiation[i] = element->backLWRadiation;
+    //      sedNetSWSolarRadiation[i] = element->sedNetSWSolarRadiation;
+    //      atmosphericLWRadiation[i] = element->atmosphericLWRadiation;
+    //      landCoverLWRadiation[i] = element->landCoverLWRadiation;
+    //      sumMCRadiation[i] = element->netMCRadiation;
+    //      shadeFactor[i] = element->shadeFactor;
+    //      shadeFactorMult[i] = element->shadeFactorMultiplier;
+    //    }
 
-    m_outNetCDFVariables["air_temperature"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), airTemperature);
+    //    m_outNetCDFVariables["depth"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), depth);
 
-    m_outNetCDFVariables["landcover_temperature"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), landCoverTemperature);
+    //    m_outNetCDFVariables["width"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), width);
 
-    m_outNetCDFVariables["net_main_channel_radiation"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), sumMCRadiation);
+    //    m_outNetCDFVariables["channel_temperature"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), temperature);
 
-    m_outNetCDFVariables["incoming_shortwave_solar_radiation"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), incomingSWSolarRadiation);
+    //    m_outNetCDFVariables["air_temperature"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), airTemperature);
 
-    m_outNetCDFVariables["net_shortwave_solar_radiation"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), netSWSolarRadiation);
+    //    m_outNetCDFVariables["landcover_temperature"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), landCoverTemperature);
 
-    m_outNetCDFVariables["back_longwave_radiation"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), backwaterLWRadiation);
+    //    m_outNetCDFVariables["net_main_channel_radiation"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), sumMCRadiation);
 
-    m_outNetCDFVariables["sediment_net_shortwave_solar_radiation"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), sedNetSWSolarRadiation);
+    //    m_outNetCDFVariables["incoming_shortwave_solar_radiation"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), incomingSWSolarRadiation);
 
-    m_outNetCDFVariables["atmospheric_longwave_radiation"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), atmosphericLWRadiation);
+    //    m_outNetCDFVariables["net_shortwave_solar_radiation"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), netSWSolarRadiation);
 
-    m_outNetCDFVariables["landcover_longwave_radiation"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), landCoverLWRadiation);
+    //    m_outNetCDFVariables["back_longwave_radiation"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), backwaterLWRadiation);
 
-    m_outNetCDFVariables["shade_factor"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), shadeFactor);
+    //    m_outNetCDFVariables["sediment_net_shortwave_solar_radiation"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), sedNetSWSolarRadiation);
 
-    m_outNetCDFVariables["shade_factor_multiplier"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), shadeFactorMult);
+    //    m_outNetCDFVariables["atmospheric_longwave_radiation"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), atmosphericLWRadiation);
 
-    delete[] depth;
-    delete[] width;
-    delete[] temperature;
-    delete[] airTemperature;
-    delete[] landCoverTemperature;
-    delete[] incomingSWSolarRadiation;
-    delete[] netSWSolarRadiation;
-    delete[] backwaterLWRadiation;
-    delete[] sedNetSWSolarRadiation;
-    delete[] atmosphericLWRadiation;
-    delete[] landCoverLWRadiation;
-    delete[] sumMCRadiation;
-    delete[] shadeFactor;
-    delete[] shadeFactorMult;
+    //    m_outNetCDFVariables["landcover_longwave_radiation"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), landCoverLWRadiation);
+
+    //    m_outNetCDFVariables["shade_factor"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), shadeFactor);
+
+    //    m_outNetCDFVariables["shade_factor_multiplier"].putVar(std::vector<size_t>({currentTime, 0}), std::vector<size_t>({1, m_elements.size()}), shadeFactorMult);
+
+    //    delete[] depth;
+    //    delete[] width;
+    //    delete[] temperature;
+    //    delete[] airTemperature;
+    //    delete[] landCoverTemperature;
+    //    delete[] incomingSWSolarRadiation;
+    //    delete[] netSWSolarRadiation;
+    //    delete[] backwaterLWRadiation;
+    //    delete[] sedNetSWSolarRadiation;
+    //    delete[] atmosphericLWRadiation;
+    //    delete[] landCoverLWRadiation;
+    //    delete[] sumMCRadiation;
+    //    delete[] shadeFactor;
+    //    delete[] shadeFactorMult;
 
     if(m_flushToDisk)
     {
@@ -1633,7 +1837,8 @@ const unordered_map<string, int> RHEModel::m_inputFileFlags({
                                                               {"[HYDRAULICS]", 6},
                                                               {"[RADIATIVE_FLUXES]", 7},
                                                               {"[METEOROLOGY]", 8},
-                                                              {"[TIMESERIES]", 9}
+                                                              {"[TIMESERIES]", 9},
+                                                              {"[OUTPUTVARIABLES]", 10}
                                                             });
 
 const unordered_map<string, int> RHEModel::m_optionsFlags({
