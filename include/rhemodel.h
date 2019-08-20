@@ -541,6 +541,16 @@ class RHECOMPONENT_EXPORT RHEModel : public QObject
      */
     bool readInputFileTimeSeriesTag(const QString &line, QString &errorMessage);
 
+
+    /*!
+     * \brief readOutputVariableOnOff
+     * \param line
+     * \param errorMessage
+     * \return
+     */
+    bool readOutputVariableOnOff(const QString &line, QString &errorMessage);
+
+
     /*!
      * \brief writeOutput
      */

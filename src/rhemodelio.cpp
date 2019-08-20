@@ -212,10 +212,13 @@ bool RHEModel::initializeInputFiles(list<string> &errors)
               case 9:
                 readSuccess = readInputFileTimeSeriesTag(line, error);
                 break;
+            case 10:
+                readSuccess = readOutputVariableOnOff(line, error);
+                break;
             }
           }
 
-          if (!readSuccess)
+          if(!readSuccess)
           {
             errors.push_back("Line " + std::to_string(lineCount) + " : " + error.toStdString());
             file.close();
@@ -1601,6 +1604,23 @@ bool RHEModel::readInputFileTimeSeriesTag(const QString &line, QString &errorMes
   else
   {
     errorMessage = "TimeSeries must have two columns";
+    return false;
+  }
+
+  return true;
+}
+
+bool RHEModel::readOutputVariableOnOff(const QString &line, QString &errorMessage)
+{
+  QStringList options = line.split(m_delimiters, QString::SkipEmptyParts);
+
+  if(options.size() ==  2)
+  {
+    m_outNetCDFVariablesOnOff[options[0].toStdString()] = !QString::compare(options[1].toLower(),"no") ||
+        !QString::compare(options[1].toLower(),"false") ? false : true;
+  }
+  else {
+    errorMessage = "Output variable must have two columns";
     return false;
   }
 
