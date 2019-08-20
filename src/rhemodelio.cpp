@@ -527,7 +527,6 @@ bool RHEModel::initializeNetCDFOutputFile(list<string> &errors)
       };
     }
 
-
     if((m_outNetCDFVariablesOnOff["landcover_temperature"] = varOnOff("landcover_temperature")))
     {
       ThreadSafeNcVar landCoverTemperatureVar =  m_outputNetCDF->addVar("landcover_temperature", "float",
@@ -554,7 +553,7 @@ bool RHEModel::initializeNetCDFOutputFile(list<string> &errors)
       incomingSWSolarRadiationVar.putAtt("long_name", "Incoming Shortwave Solar Radiation");
       incomingSWSolarRadiationVar.putAtt("units", "W/m^2");
       m_outNetCDFVariables["incoming_shortwave_solar_radiation"] = incomingSWSolarRadiationVar;
-      m_outNetCDFVariablesIOFunctions["air_temperature"] = [](size_t currentTime, ThreadSafeNcVar &variable, const std::vector<Element*>& elements)
+      m_outNetCDFVariablesIOFunctions["incoming_shortwave_solar_radiation"] = [](size_t currentTime, ThreadSafeNcVar &variable, const std::vector<Element*>& elements)
       {
         float *incoming_shortwave_solar_radiation = new float[elements.size()];
         for (size_t i = 0; i < elements.size(); i++)
@@ -592,7 +591,7 @@ bool RHEModel::initializeNetCDFOutputFile(list<string> &errors)
       backLWRadiationVar.putAtt("long_name", "Back Longwave Radiation");
       backLWRadiationVar.putAtt("units", "W/m^2");
       m_outNetCDFVariables["back_longwave_radiation"] = backLWRadiationVar;
-      m_outNetCDFVariablesIOFunctions["air_temperature"] = [](size_t currentTime, ThreadSafeNcVar &variable, const std::vector<Element*>& elements)
+      m_outNetCDFVariablesIOFunctions["back_longwave_radiation"] = [](size_t currentTime, ThreadSafeNcVar &variable, const std::vector<Element*>& elements)
       {
         float *back_longwave_radiation = new float[elements.size()];
         for (size_t i = 0; i < elements.size(); i++)
@@ -611,7 +610,7 @@ bool RHEModel::initializeNetCDFOutputFile(list<string> &errors)
       sedNetSWSolarRadiationVar.putAtt("long_name", "Net Shortwave Solar Radiation Reaching Sediment");
       sedNetSWSolarRadiationVar.putAtt("units", "W/m^2");
       m_outNetCDFVariables["sediment_net_shortwave_solar_radiation"] = sedNetSWSolarRadiationVar;
-      m_outNetCDFVariablesIOFunctions["air_temperature"] = [](size_t currentTime, ThreadSafeNcVar &variable, const std::vector<Element*>& elements)
+      m_outNetCDFVariablesIOFunctions["sediment_net_shortwave_solar_radiation"] = [](size_t currentTime, ThreadSafeNcVar &variable, const std::vector<Element*>& elements)
       {
         float *sediment_net_shortwave_solar_radiation = new float[elements.size()];
         for (size_t i = 0; i < elements.size(); i++)
@@ -630,7 +629,7 @@ bool RHEModel::initializeNetCDFOutputFile(list<string> &errors)
       atmosphericLWRadiationVar.putAtt("long_name", "Atmospheric Longwave Radiation");
       atmosphericLWRadiationVar.putAtt("units", "W/m^2");
       m_outNetCDFVariables["atmospheric_longwave_radiation"] = atmosphericLWRadiationVar;
-      m_outNetCDFVariablesIOFunctions["air_temperature"] = [](size_t currentTime, ThreadSafeNcVar &variable, const std::vector<Element*>& elements)
+      m_outNetCDFVariablesIOFunctions["atmospheric_longwave_radiation"] = [](size_t currentTime, ThreadSafeNcVar &variable, const std::vector<Element*>& elements)
       {
         float *atmospheric_longwave_radiation = new float[elements.size()];
         for (size_t i = 0; i < elements.size(); i++)
